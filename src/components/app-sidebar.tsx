@@ -10,7 +10,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar"
-import { BookOpen, ChevronDoubleRight, Home, SquareSolid } from "@mynaui/icons-react";
+import { ChevronDoubleRight, SquareSolid } from "@mynaui/icons-react";
 import { LargeP, TinyP } from "./typography";
 import { Button } from "./ui/button";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { app } from "@tauri-apps/api";
 import { useSetAtom } from "jotai/react";
 import { appStateAtom } from "@/lib/store";
+import { routes } from "@/lib/routes";
 
 export function AppSidebar() {
     const { resolvedLocation } = useRouterState();
@@ -25,18 +26,6 @@ export function AppSidebar() {
 
     const { toggleSidebar, open } = useSidebar();
     const [version, setVersion] = useState("");
-    const items = [
-        {
-            title: "Home",
-            url: "/",
-            icon: Home,
-        },
-        {
-            title: "Library",
-            url: "/library",
-            icon: BookOpen,
-        }
-    ];
 
     useEffect(() => {
         app.getVersion().then(v => setVersion(v));
@@ -60,7 +49,7 @@ export function AppSidebar() {
                             </div>
                             <div className="grid flex-1 text-left text-sm leading-tight">
                                 <LargeP className="truncate">NovelScraper</LargeP>
-                                <TinyP className="truncate">{version}</TinyP>
+                                <TinyP className="truncate">v{version}</TinyP>
                             </div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -68,12 +57,14 @@ export function AppSidebar() {
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>
-                    {/* <SidebarGroupLabel>Application</SidebarGroupLabel> */}
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {items.map((item) => (
+                            {routes.map((item) => (
                                 <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton asChild isActive={resolvedLocation.pathname === item.url}>
+                                    <SidebarMenuButton asChild isActive={resolvedLocation.pathname === "/"
+                                        ? item.url === "/"
+                                        : resolvedLocation.pathname.includes(item.url) && item.url !== "/"
+                                    }>
                                         <Link href={item.url}>
                                             <item.icon width={24} height={24} />
                                             <span>{item.title}</span>

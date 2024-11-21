@@ -9,6 +9,25 @@
     "core:default",
     "shell:allow-open",
     "store:default",
-    "fs:default"
+    "fs:default",
+    "fs:allow-write-text-file",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$DOCUMENT"
+        },
+        {
+          "path": "$DOCUMENT/**"
+        },
+        {
+          "path": "$DOWNLOAD"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        }
+      ]
+    },
+    "dialog:default"
   ]
 }

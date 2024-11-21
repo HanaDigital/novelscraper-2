@@ -1,4 +1,5 @@
-import { H1 } from '@/components/typography';
+import Page from '@/components/page';
+import { H4 } from '@/components/typography';
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({
@@ -7,8 +8,8 @@ export const Route = createFileRoute('/')({
 
 function RouteComponent() {
     return (
-        <main className="w-full h-screen px-4 py-2">
-            <H1>Home</H1>
-        </main>
+        <Page header={<H4>Home</H4>}>
+
+        </Page>
     );
 }

@@ -11,10 +11,19 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as SettingsImport } from './routes/settings'
 import { Route as LibraryImport } from './routes/library'
 import { Route as IndexImport } from './routes/index'
+import { Route as SourcesIndexImport } from './routes/sources/index'
+import { Route as SourcesSourceIdImport } from './routes/sources/$sourceId'
 
 // Create/Update Routes
+
+const SettingsRoute = SettingsImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const LibraryRoute = LibraryImport.update({
   id: '/library',
@@ -25,6 +34,18 @@ const LibraryRoute = LibraryImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SourcesIndexRoute = SourcesIndexImport.update({
+  id: '/sources/',
+  path: '/sources/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SourcesSourceIdRoute = SourcesSourceIdImport.update({
+  id: '/sources/$sourceId',
+  path: '/sources/$sourceId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -46,6 +67,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryImport
       parentRoute: typeof rootRoute
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsImport
+      parentRoute: typeof rootRoute
+    }
+    '/sources/$sourceId': {
+      id: '/sources/$sourceId'
+      path: '/sources/$sourceId'
+      fullPath: '/sources/$sourceId'
+      preLoaderRoute: typeof SourcesSourceIdImport
+      parentRoute: typeof rootRoute
+    }
+    '/sources/': {
+      id: '/sources/'
+      path: '/sources'
+      fullPath: '/sources'
+      preLoaderRoute: typeof SourcesIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -54,36 +96,57 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
+  '/settings': typeof SettingsRoute
+  '/sources/$sourceId': typeof SourcesSourceIdRoute
+  '/sources': typeof SourcesIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
+  '/settings': typeof SettingsRoute
+  '/sources/$sourceId': typeof SourcesSourceIdRoute
+  '/sources': typeof SourcesIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
+  '/settings': typeof SettingsRoute
+  '/sources/$sourceId': typeof SourcesSourceIdRoute
+  '/sources/': typeof SourcesIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/library'
+  fullPaths: '/' | '/library' | '/settings' | '/sources/$sourceId' | '/sources'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/library'
-  id: '__root__' | '/' | '/library'
+  to: '/' | '/library' | '/settings' | '/sources/$sourceId' | '/sources'
+  id:
+    | '__root__'
+    | '/'
+    | '/library'
+    | '/settings'
+    | '/sources/$sourceId'
+    | '/sources/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LibraryRoute: typeof LibraryRoute
+  SettingsRoute: typeof SettingsRoute
+  SourcesSourceIdRoute: typeof SourcesSourceIdRoute
+  SourcesIndexRoute: typeof SourcesIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LibraryRoute: LibraryRoute,
+  SettingsRoute: SettingsRoute,
+  SourcesSourceIdRoute: SourcesSourceIdRoute,
+  SourcesIndexRoute: SourcesIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -97,7 +160,10 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/library"
+        "/library",
+        "/settings",
+        "/sources/$sourceId",
+        "/sources/"
       ]
     },
     "/": {
@@ -105,6 +171,15 @@ export const routeTree = rootRoute
     },
     "/library": {
       "filePath": "library.tsx"
+    },
+    "/settings": {
+      "filePath": "settings.tsx"
+    },
+    "/sources/$sourceId": {
+      "filePath": "sources/$sourceId.tsx"
+    },
+    "/sources/": {
+      "filePath": "sources/index.tsx"
     }
   }
 }

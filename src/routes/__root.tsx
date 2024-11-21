@@ -6,6 +6,8 @@ import { Fragment, useEffect } from 'react';
 import { load } from '@tauri-apps/plugin-store';
 import { useAtom, useSetAtom } from 'jotai/react';
 import { appStateAtom, AppStateT, appStoreAtom } from '@/lib/store';
+import Loader from '@/components/loader';
+import * as path from '@tauri-apps/api/path';
 
 export const Route = createRootRoute({
     component: RootComponent,
@@ -29,18 +31,21 @@ function RootComponent() {
         setAppStore(store);
 
         const state = await store.get(appState.key) as AppStateT | undefined;
+        const libraryRootPath = await path.join(await path.documentDir(), "NovelScraper-Library");
         if (state) {
             state.initialized = true;
+            if (!state.libraryRootPath) state.libraryRootPath = libraryRootPath;
             setAppState(state);
         } else {
             setAppState((state) => {
                 state.initialized = true;
+                state.libraryRootPath = libraryRootPath;
                 return state;
             });
         }
     }
 
-    if (!appState.initialized) return <div>Loading...</div>;
+    if (!appState.initialized) return <Loader />;
     return (
         <Fragment>
             <SidebarProvider defaultOpen={appState.isSidePanelOpen}>
