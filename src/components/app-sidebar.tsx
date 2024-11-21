@@ -13,11 +13,16 @@ import {
 import { BookOpen, ChevronDoubleRight, Home, SquareSolid } from "@mynaui/icons-react";
 import { LargeP, TinyP } from "./typography";
 import { Button } from "./ui/button";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { app } from "@tauri-apps/api";
+import { useSetAtom } from "jotai/react";
+import { appStateAtom } from "@/lib/store";
 
 export function AppSidebar() {
+    const { resolvedLocation } = useRouterState();
+    const setAppState = useSetAtom(appStateAtom);
+
     const { toggleSidebar, open } = useSidebar();
     const [version, setVersion] = useState("");
     const items = [
@@ -36,6 +41,13 @@ export function AppSidebar() {
     useEffect(() => {
         app.getVersion().then(v => setVersion(v));
     }, []);
+
+    useEffect(() => {
+        setAppState((state) => {
+            state.isSidePanelOpen = open;
+            return state;
+        });
+    }, [open]);
 
     return (
         <Sidebar collapsible="icon">
@@ -61,7 +73,7 @@ export function AppSidebar() {
                         <SidebarMenu>
                             {items.map((item) => (
                                 <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton asChild>
+                                    <SidebarMenuButton asChild isActive={resolvedLocation.pathname === item.url}>
                                         <Link href={item.url}>
                                             <item.icon width={24} height={24} />
                                             <span>{item.title}</span>
