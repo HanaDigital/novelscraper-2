@@ -60,7 +60,7 @@ export function AppSidebar() {
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {routes.map((item) => (
-                                <SidebarMenuItem key={item.title}>
+                                <SidebarMenuItem key={item.url}>
                                     <SidebarMenuButton asChild isActive={resolvedLocation.pathname === "/"
                                         ? item.url === "/"
                                         : resolvedLocation.pathname.includes(item.url) && item.url !== "/"

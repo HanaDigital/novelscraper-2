@@ -1,12 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { H4, P } from '@/components/typography';
+import { H4, InlineCode, P, TinyP } from '@/components/typography';
 import { Button } from '@/components/ui/button';
 import { open } from '@tauri-apps/plugin-dialog';
-import { writeTextFile, exists, mkdir } from '@tauri-apps/plugin-fs';
+import { writeTextFile } from '@tauri-apps/plugin-fs';
 import { useAtom } from 'jotai/react';
 import { appStateAtom } from '@/lib/store';
 import * as path from '@tauri-apps/api/path';
 import Page from '@/components/page';
+import { createLibraryPath } from '@/lib/library';
+import { InfoCircle } from '@mynaui/icons-react';
 
 export const Route = createFileRoute('/settings')({
     component: RouteComponent,
@@ -26,8 +28,7 @@ function RouteComponent() {
         });
         if (!dir) return;
         const newLibraryRootPath = await path.join(dir, "NovelScraper-Library");
-        const dirExists = await exists(newLibraryRootPath);
-        if (!dirExists) await mkdir(newLibraryRootPath, { recursive: true });
+        await createLibraryPath(newLibraryRootPath);
         setAppState((state) => {
             state.libraryRootPath = newLibraryRootPath;
             return state;
@@ -42,11 +43,17 @@ function RouteComponent() {
 
     return (
         <Page header={<H4>Settings</H4>}>
-            <div className="flex items-center bg-card border rounded pl-2">
-                <P className='flex-1'>{appState.libraryRootPath}</P>
-                <Button onClick={handleSavePath}>Change Path</Button>
+            <div className="flex flex-col">
+                <TinyP className="mb-2">Library Root Path</TinyP>
+                <div className="flex items-center bg-card border rounded pl-2">
+                    <P className='flex-1'>{appState.libraryRootPath}</P>
+                    <Button onClick={handleSavePath}>Change Path</Button>
+                </div>
+                <TinyP className="text-muted-foreground flex gap-1 items-center">
+                    <InfoCircle width={15} />
+                    The <b><i>NovelScraper-Library</i></b> folder will be created in the selected path.
+                </TinyP>
             </div>
-            <Button onClick={handleWriteFile}>Write File</Button>
         </Page>
     );
 }
