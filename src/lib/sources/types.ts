@@ -41,6 +41,6 @@ export class NovelSource {
 	}
 
 	async searchNovels(query: string): Promise<NovelT[]> {
-		throw new Error("Method not implemented.");
+		throw new Error(`${this.name}: 'searchNovels' method not implemented.`);
 	}
 }
