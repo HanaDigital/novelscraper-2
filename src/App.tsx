@@ -6,21 +6,21 @@ import { AppSidebar } from "./components/app-sidebar";
 import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+	const [greetMsg, setGreetMsg] = useState("");
+	const [name, setName] = useState("");
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name: "Shehryar" }));
-  }
+	async function greet() {
+		// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+		setGreetMsg(await invoke("greet", { name: "Shehryar" }));
+	}
 
-  return (
-    <SidebarProvider defaultOpen={true}>
-      <AppSidebar />
-      <main className="bg-background w-full h-screen">
-      </main>
-    </SidebarProvider>
-  );
+	return (
+		<SidebarProvider defaultOpen={true}>
+			<AppSidebar />
+			<main className="bg-background w-full h-screen">
+			</main>
+		</SidebarProvider>
+	);
 }
 
 export default App;

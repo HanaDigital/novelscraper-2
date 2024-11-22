@@ -11,44 +11,44 @@ import * as path from '@tauri-apps/api/path';
 import { createLibraryPath } from '@/lib/library';
 
 export const Route = createRootRoute({
-    component: RootComponent,
+	component: RootComponent,
 })
 
 function RootComponent() {
-    const [appStore, setAppStore] = useAtom(appStoreAtom);
-    const [appState, setAppState] = useAtom(appStateAtom);
+	const [appStore, setAppStore] = useAtom(appStoreAtom);
+	const [appState, setAppState] = useAtom(appStateAtom);
 
-    useEffect(() => {
-        loadStore();
-    }, []);
+	useEffect(() => {
+		loadStore();
+	}, []);
 
-    useEffect(() => {
-        if (!appStore) return;
-        appStore.set(appState.key, appState);
-    }, [appStore, appState]);
+	useEffect(() => {
+		if (!appStore) return;
+		appStore.set(appState.key, appState);
+	}, [appStore, appState]);
 
-    const loadStore = async () => {
-        const store = await load('store.json', { autoSave: true });
-        setAppStore(store);
+	const loadStore = async () => {
+		const store = await load('store.json', { autoSave: true });
+		setAppStore(store);
 
-        let state = await store.get(appState.key) as AppStateT | undefined;
-        if (!state) state = appState;
+		let state = await store.get(appState.key) as AppStateT | undefined;
+		if (!state) state = appState;
 
-        state.initialized = true;
-        if (!state.libraryRootPath) state.libraryRootPath = await path.join(await path.documentDir(), "NovelScraper-Library");
-        setAppState(state);
+		state.initialized = true;
+		if (!state.libraryRootPath) state.libraryRootPath = await path.join(await path.documentDir(), "NovelScraper-Library");
+		setAppState(state);
 
-        await createLibraryPath(state.libraryRootPath);
-    }
+		await createLibraryPath(state.libraryRootPath);
+	}
 
-    if (!appState.initialized) return <Loader />;
-    return (
-        <Fragment>
-            <SidebarProvider defaultOpen={appState.isSidePanelOpen}>
-                <AppSidebar />
-                <Outlet />
-            </SidebarProvider>
-            <TanStackRouterDevtools position='bottom-right' />
-        </Fragment>
-    )
+	if (!appState.initialized) return <Loader />;
+	return (
+		<Fragment>
+			<SidebarProvider defaultOpen={appState.isSidePanelOpen}>
+				<AppSidebar />
+				<Outlet />
+			</SidebarProvider>
+			<TanStackRouterDevtools position='bottom-right' />
+		</Fragment>
+	)
 }

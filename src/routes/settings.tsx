@@ -11,49 +11,49 @@ import { createLibraryPath } from '@/lib/library';
 import { InfoCircle } from '@mynaui/icons-react';
 
 export const Route = createFileRoute('/settings')({
-    component: RouteComponent,
+	component: RouteComponent,
 })
 
 function RouteComponent() {
-    const [appState, setAppState] = useAtom(appStateAtom);
+	const [appState, setAppState] = useAtom(appStateAtom);
 
-    const handleSavePath = async () => {
-        const libraryParentPath = await path.resolve(appState.libraryRootPath, "..");
-        const dir = await open({
-            multiple: false,
-            directory: true,
-            recursive: true,
-            defaultPath: libraryParentPath,
-            title: "Select a directory",
-        });
-        if (!dir) return;
-        const newLibraryRootPath = await path.join(dir, "NovelScraper-Library");
-        await createLibraryPath(newLibraryRootPath);
-        setAppState((state) => {
-            state.libraryRootPath = newLibraryRootPath;
-            return state;
-        });
-    }
+	const handleSavePath = async () => {
+		const libraryParentPath = await path.resolve(appState.libraryRootPath, "..");
+		const dir = await open({
+			multiple: false,
+			directory: true,
+			recursive: true,
+			defaultPath: libraryParentPath,
+			title: "Select a directory",
+		});
+		if (!dir) return;
+		const newLibraryRootPath = await path.join(dir, "NovelScraper-Library");
+		await createLibraryPath(newLibraryRootPath);
+		setAppState((state) => {
+			state.libraryRootPath = newLibraryRootPath;
+			return state;
+		});
+	}
 
-    const handleWriteFile = async () => {
-        const contents = JSON.stringify({ notifications: true });
-        const filePath = await path.join(appState.libraryRootPath, "config.json");
-        await writeTextFile(filePath, contents);
-    }
+	const handleWriteFile = async () => {
+		const contents = JSON.stringify({ notifications: true });
+		const filePath = await path.join(appState.libraryRootPath, "config.json");
+		await writeTextFile(filePath, contents);
+	}
 
-    return (
-        <Page header={<H4>Settings</H4>}>
-            <div className="flex flex-col">
-                <TinyP className="mb-2">Library Root Path</TinyP>
-                <div className="flex items-center bg-card border rounded pl-2">
-                    <P className='flex-1'>{appState.libraryRootPath}</P>
-                    <Button onClick={handleSavePath}>Change Path</Button>
-                </div>
-                <TinyP className="text-muted-foreground flex gap-1 items-center">
-                    <InfoCircle width={15} />
-                    The <b><i>NovelScraper-Library</i></b> folder will be created in the selected path.
-                </TinyP>
-            </div>
-        </Page>
-    );
+	return (
+		<Page header={<H4>Settings</H4>}>
+			<div className="flex flex-col">
+				<TinyP className="mb-2">Library Root Path</TinyP>
+				<div className="flex items-center bg-card border rounded pl-2">
+					<P className='flex-1'>{appState.libraryRootPath}</P>
+					<Button onClick={handleSavePath}>Change Path</Button>
+				</div>
+				<TinyP className="text-muted-foreground flex gap-1 items-center">
+					<InfoCircle width={15} />
+					The <b><i>NovelScraper-Library</i></b> folder will be created in the selected path.
+				</TinyP>
+			</div>
+		</Page>
+	);
 }
