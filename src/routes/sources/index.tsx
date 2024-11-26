@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { H4, SmallP, TinyP } from '@/components/typography'
+import { SmallP, TinyP } from '@/components/typography'
 import { Sources } from '@/lib/sources/sources'
 import Page from '@/components/page'
 
@@ -9,14 +9,11 @@ export const Route = createFileRoute('/sources/')({
 
 function RouteComponent() {
 	return (
-		<Page
-			className="grid grid-cols-3 gap-4"
-			header={<H4>Sources</H4>}
-		>
+		<Page className="grid grid-cols-3 gap-4">
 			{Sources.map((s) => (
 				<Link
 					key={s.id}
-					className="flex flex-col gap-3 group rounded-lg bg-card border p-2 hover:shadow-dark"
+					className="flex flex-col gap-3 group rounded-lg bg-card border p-2 pb-2 hover:shadow-dark"
 					href={`/sources/${s.id}`}
 				>
 					<div className="rounded-lg overflow-hidden">

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { H4, InlineCode, P, TinyP } from '@/components/typography';
+import { P, TinyP } from '@/components/typography';
 import { Button } from '@/components/ui/button';
 import { open } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
@@ -42,7 +42,7 @@ function RouteComponent() {
 	}
 
 	return (
-		<Page header={<H4>Settings</H4>}>
+		<Page>
 			<div className="flex flex-col">
 				<TinyP className="mb-2">Library Root Path</TinyP>
 				<div className="flex items-center bg-card border rounded pl-2">

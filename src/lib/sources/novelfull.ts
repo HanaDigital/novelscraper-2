@@ -28,7 +28,8 @@ export class NovelFull extends NovelSource {
 			if (url) url = `${this.url}${url}`;
 
 			const author = $(elem).find(".author").text().trim() ?? "Unknown";
-			const thumbnailURL = $(elem).find("img").attr("src");
+			let thumbnailURL = $(elem).find("img").attr("src");
+			if (thumbnailURL) thumbnailURL = `${this.url}${thumbnailURL}`;
 
 			const novel: NovelT = {
 				id: url,

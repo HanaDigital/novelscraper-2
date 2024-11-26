@@ -1,5 +1,4 @@
 import Page from '@/components/page';
-import { H1, H4 } from '@/components/typography';
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/library')({
@@ -8,7 +7,7 @@ export const Route = createFileRoute('/library')({
 
 function RouteComponent() {
 	return (
-		<Page header={<H4>Library</H4>}>
+		<Page>
 
 		</Page>
 	);
