@@ -1,6 +1,7 @@
 import { Store } from '@tauri-apps/plugin-store'
 import { atomWithImmer } from 'jotai-immer'
 import { atom } from 'jotai/vanilla'
+import { NovelT } from "./sources/types";
 
 export const appStoreAtom = atom<Store>();
 
@@ -15,4 +16,13 @@ export const appStateAtom = atomWithImmer<AppStateT>({
 	initialized: false,
 	isSidePanelOpen: true,
 	libraryRootPath: "",
+})
+
+export type ActiveNovelT = {
+	backLink: string | null;
+	novel: NovelT | null;
+}
+export const activeNovelAtom = atom({
+	backLink: null,
+	novel: null,
 })
