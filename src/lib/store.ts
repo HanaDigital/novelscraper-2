@@ -1,9 +1,7 @@
-import { Store } from '@tauri-apps/plugin-store'
 import { atomWithImmer } from 'jotai-immer'
 import { atom } from 'jotai/vanilla'
 import { NovelT } from "./sources/types";
-
-export const appStoreAtom = atom<Store>();
+import { SourceIDsT, SOURCES } from "./sources/sources";
 
 export type AppStateT = {
 	key: string;
@@ -18,11 +16,12 @@ export const appStateAtom = atomWithImmer<AppStateT>({
 	libraryRootPath: "",
 })
 
-export type ActiveNovelT = {
-	backLink: string | null;
-	novel: NovelT | null;
-}
-export const activeNovelAtom = atom({
-	backLink: null,
-	novel: null,
-})
+
+type searchHistoryT = { [key in SourceIDsT]: NovelT[]; }
+const searchHistory: searchHistoryT = {} as searchHistoryT;
+Object.keys(SOURCES).forEach((s) => {
+	searchHistory[s as SourceIDsT] = [];
+});
+export const searchHistoryAtom = atomWithImmer<searchHistoryT>(searchHistory);
+
+export const activeNovelAtom = atom<NovelT | null>(null);

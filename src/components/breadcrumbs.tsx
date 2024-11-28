@@ -1,12 +1,24 @@
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useRouter } from "@tanstack/react-router";
 import { H4 } from "./typography";
 import { routes } from "@/lib/routes";
-import { Sources } from "@/lib/sources/sources";
-
+import { SourceIDsT, SOURCES } from "@/lib/sources/sources";
+import { Button } from "./ui/button";
+import { ChevronLeft } from "@mynaui/icons-react";
+import { useAtomValue } from "jotai/react";
+import { activeNovelAtom } from "@/lib/store";
 
 export default function Breadcrumbs() {
 	const location = useLocation();
+	const { history } = useRouter();
+	const activeNovel = useAtomValue(activeNovelAtom);
+
 	const routeURLs = routes.map((r) => r.url);
+
+	if (location.pathname === "/novel")
+		return <div className="flex items-center gap-2">
+			<Button variant="ghost" size="icon" onClick={() => history.go(-1)}><ChevronLeft /></Button>
+			<H4 className="text-ellipsis text-nowrap overflow-hidden flex-1">{activeNovel?.title}{activeNovel?.title}{activeNovel?.title}</H4>
+		</div>
 
 	if (routeURLs.includes(location.pathname))
 		return <H4>{routes.find((r) => r.url === location.pathname)!.title}</H4>;
@@ -15,13 +27,15 @@ export default function Breadcrumbs() {
 	locationSplit.shift();
 	if (locationSplit.length === 2) {
 		if (locationSplit[0] === "sources") {
+			const source = SOURCES[locationSplit[1] as SourceIDsT];
+			if (!source) throw new Error("Source not found");
 			return (
 				<div className="flex items-center gap-2">
 					<Link href="/sources">
 						<H4 className="text-muted-foreground hover:underline">Store</H4>
 					</Link>
 					<H4 className="text-muted-foreground">/</H4>
-					<H4>{Sources.find((s) => s.id === locationSplit[1])?.name}</H4>
+					<H4>{source.name}</H4>
 				</div>
 			);
 		} else if (locationSplit[0] === "library") {

@@ -1,11 +1,11 @@
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
-import { Link, Outlet, createRootRoute } from '@tanstack/react-router'
+import { Outlet, createRootRoute } from '@tanstack/react-router'
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
-import { Fragment, useEffect } from 'react';
-import { load } from '@tauri-apps/plugin-store';
-import { useAtom, useSetAtom } from 'jotai/react';
-import { appStateAtom, AppStateT, appStoreAtom } from '@/lib/store';
+import { Fragment, useEffect, useState } from 'react';
+import { load, Store } from '@tauri-apps/plugin-store';
+import { useAtom } from 'jotai/react';
+import { appStateAtom, AppStateT } from '@/lib/store';
 import Loader from '@/components/loader';
 import * as path from '@tauri-apps/api/path';
 import { createLibraryPath } from '@/lib/library';
@@ -15,11 +15,12 @@ export const Route = createRootRoute({
 })
 
 function RootComponent() {
-	const [appStore, setAppStore] = useAtom(appStoreAtom);
+	const [appStore, setAppStore] = useState<Store>();
 	const [appState, setAppState] = useAtom(appStateAtom);
 
 	useEffect(() => {
 		loadStore();
+		// console.log("!!!LOAD");
 	}, []);
 
 	useEffect(() => {
@@ -41,7 +42,7 @@ function RootComponent() {
 		await createLibraryPath(state.libraryRootPath);
 	}
 
-	if (!appState.initialized) return <Loader />;
+	// if (!appState.initialized) return <Loader />;
 	return (
 		<Fragment>
 			<SidebarProvider defaultOpen={appState.isSidePanelOpen}>

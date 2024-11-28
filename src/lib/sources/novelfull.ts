@@ -1,6 +1,6 @@
-import { invoke } from "@tauri-apps/api/core";
-import { NovelSource, NovelSourceProps, NovelT } from "./types";
 import * as cheerio from 'cheerio';
+import { NovelSource, NovelSourceProps, NovelT } from "./types";
+import { invoke } from "@tauri-apps/api/core";
 import { novelFullSearchHTML } from "./test-data";
 
 export class NovelFull extends NovelSource {
@@ -12,8 +12,8 @@ export class NovelFull extends NovelSource {
 	async searchNovels(query: string): Promise<NovelT[]> {
 		const encodedQuery = encodeURIComponent(query);
 		const url = `${this.url}/search?keyword=${encodedQuery}`;
-		// const response = await invoke<string>('fetch_html', { url });
-		const response = novelFullSearchHTML;
+		const response = await invoke<string>('fetch_html', { url });
+		// const response = novelFullSearchHTML;
 		if (!response) throw new Error('Failed to fetch novels');
 		return this.getNovelsFromSearchPage(response);
 	}

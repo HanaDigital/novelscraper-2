@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { SmallP, TinyP } from '@/components/typography'
-import { Sources } from '@/lib/sources/sources'
+import { SOURCES } from '@/lib/sources/sources'
 import Page from '@/components/page'
 
 export const Route = createFileRoute('/sources/')({
@@ -10,7 +10,7 @@ export const Route = createFileRoute('/sources/')({
 function RouteComponent() {
 	return (
 		<Page className="grid grid-cols-3 gap-4">
-			{Sources.map((s) => (
+			{Object.values(SOURCES).map((s) => (
 				<Link
 					key={s.id}
 					className="flex flex-col gap-3 group rounded-lg bg-card border p-2 pb-2 hover:shadow-dark"

@@ -1,16 +1,21 @@
-import { NovelT } from "@/lib/sources/types";
 import { Link } from "@tanstack/react-router";
 import { SmallP, TinyP } from "./typography";
+import { useSetAtom } from "jotai/react";
+import { activeNovelAtom } from "@/lib/store";
+import { NovelT } from "@/lib/sources/types";
 
 type NovelCardProps = {
 	href: string;
 	novel: NovelT;
 }
 export default function NovelCard({ href, novel }: NovelCardProps) {
+	const setActiveNovel = useSetAtom(activeNovelAtom);
+
 	return (
 		<Link
 			className="flex flex-col gap-3 group rounded-lg bg-card border p-2 pb-3 hover:border-primary-foreground"
 			href={href}
+			onClick={() => setActiveNovel(novel)}
 		>
 			<div className="rounded-lg overflow-hidden w-full h-64 grid place-items-center bg-background border">
 				<img
