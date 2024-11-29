@@ -1,11 +1,15 @@
 export type NovelT = {
 	id: string;
-	source: NovelSource;
+	source: string;
 	url: string;
 	title: string;
 	authors: string[];
 	genres: string[];
 	alternativeTitles: string[];
+	isDownloaded: boolean;
+	isInLibrary: boolean;
+	isFavorite: boolean;
+	isMetadataLoaded: boolean;
 	description?: string;
 	coverURL?: string;
 	thumbnailURL?: string;
@@ -13,9 +17,7 @@ export type NovelT = {
 	totalChapters?: number;
 	downloadedChapters?: number;
 	status?: string;
-	isDownloaded?: boolean;
-	isInLibrary?: boolean;
-	isFavorite?: boolean;
+	rating?: string;
 }
 
 export type NovelSourceProps = {
@@ -42,5 +44,9 @@ export class NovelSource {
 
 	async searchNovels(query: string): Promise<NovelT[]> {
 		throw new Error(`${this.name}: 'searchNovels' method not implemented.`);
+	}
+
+	async updateNovelMetadata(novel: NovelT): Promise<NovelT> {
+		throw new Error(`${this.name}: 'updateNovelMetadata' method not implemented.`);
 	}
 }

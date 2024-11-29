@@ -17,7 +17,7 @@ export default function Breadcrumbs() {
 	if (location.pathname === "/novel")
 		return <div className="flex items-center gap-2">
 			<Button variant="ghost" size="icon" onClick={() => history.go(-1)}><ChevronLeft /></Button>
-			<H4 className="text-ellipsis text-nowrap overflow-hidden flex-1">{activeNovel?.title}{activeNovel?.title}{activeNovel?.title}</H4>
+			<H4 className="text-ellipsis text-nowrap overflow-hidden flex-1">{activeNovel?.title}</H4>
 		</div>
 
 	if (routeURLs.includes(location.pathname))

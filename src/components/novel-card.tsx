@@ -17,10 +17,10 @@ export default function NovelCard({ href, novel }: NovelCardProps) {
 			href={href}
 			onClick={() => setActiveNovel(novel)}
 		>
-			<div className="rounded-lg overflow-hidden w-full h-64 grid place-items-center bg-background border">
+			<div className="rounded-lg overflow-hidden w-full h-60 grid place-items-center bg-background border">
 				<img
 					className="group-hover:scale-[1.05] transition-transform w-full"
-					src={novel.thumbnailURL}
+					src={novel.coverURL ?? novel.thumbnailURL}
 					alt={`${novel.title} thumbnail`}
 				/>
 			</div>

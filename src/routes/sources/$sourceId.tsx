@@ -7,6 +7,7 @@ import { searchHistoryAtom } from "@/lib/store"
 import { createFileRoute, useLocation } from '@tanstack/react-router'
 import { message } from "@tauri-apps/plugin-dialog"
 import { useAtom } from "jotai/react"
+import { CircleDashed } from "lucide-react"
 import { useEffect, useState } from 'react'
 
 export const Route = createFileRoute('/sources/$sourceId')({
@@ -29,6 +30,7 @@ function RouteComponent() {
 		if (!source || !query || isSearching) return;
 		try {
 			setIsSearching(true);
+			await new Promise((resolve) => setTimeout(resolve, 500));
 			const searchedNovels = await source.searchNovels(query);
 			setSearchHistory((state) => {
 				let novels = state[sourceId as SourceIDsT];
