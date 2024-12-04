@@ -2181,6 +2181,7 @@ name = "novelscraper-2"
 version = "0.1.0"
 dependencies = [
  "isahc",
+ "kuchikiki",
  "serde",
  "serde_json",
  "tauri",

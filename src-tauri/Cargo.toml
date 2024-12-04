@@ -27,4 +27,5 @@ tauri-plugin-fs = "2"
 tauri-plugin-persisted-scope = "2.0.0"
 tauri-plugin-dialog = "2"
 isahc = "1.7.2"
+kuchikiki = "0.8.2"
 

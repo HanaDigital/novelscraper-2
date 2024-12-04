@@ -7,6 +7,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useAtom, useSetAtom } from "jotai/react";
 import { useEffect, useState } from "react";
 import clone from "clone";
+import { Button } from "@/components/ui/button";
+import { Download } from "@mynaui/icons-react";
 
 export const Route = createFileRoute('/novel')({
 	component: RouteComponent,
@@ -40,9 +42,17 @@ function RouteComponent() {
 		}
 	}
 
+	const handleDownload = async () => {
+		if (!novel) return;
+		const novelSource = SOURCES[novel.source as SourceIDsT];
+		await new Promise((resolve) => setTimeout(resolve, 500));
+		const downloadedNovel = await novelSource.downloadNovel(novel);
+	}
+
 	if (!novel) return <Loader />
 	return (
 		<Page>
+			<Button size="icon" onClick={handleDownload}><Download /></Button>
 			<img src={novel.coverURL || novel.thumbnailURL} alt="Novel Cover" />
 			<h1>{novel.title}</h1>
 			<p>{novel.description}</p>

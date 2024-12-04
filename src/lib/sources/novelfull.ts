@@ -1,7 +1,8 @@
 import * as cheerio from 'cheerio';
-import { NovelSource, NovelSourceProps, NovelT } from "./types";
+import { ChapterT, NovelSource, NovelSourceProps, NovelT } from "./types";
 import { invoke } from "@tauri-apps/api/core";
 import { novelFullSearchHTML } from "./test-data";
+import { hashString } from "../utils";
 
 export class NovelFull extends NovelSource {
 
@@ -25,10 +26,10 @@ export class NovelFull extends NovelSource {
 
 		// Get novel metadata
 		const novelInfoElem = $(".col-info-desc");
-		const title = novelInfoElem.find(".desc > h3.title").text().trim();
+		const title = novelInfoElem.find(".desc > h3.title").first().text().trim();
 		const rating = novelInfoElem.find(".small").text().trim().replace("Rating: ", "").replace(/from[\S\s]*?(?=\d)/g, "from ");
 		const description = novelInfoElem.find(".desc-text").text().trim();
-		const latestChapterTitle = novelInfoElem.find(".l-chapter > ul.l-chapters > li").text().trim();
+		const latestChapterTitle = novelInfoElem.find(".l-chapter > ul.l-chapters > li").first().text().trim();
 		const coverURL = novelInfoElem.find(".info-holder .book img").attr("src");
 
 		const infoHolderElems = $(".info-holder > .info > div");
@@ -78,7 +79,11 @@ export class NovelFull extends NovelSource {
 		novel.totalChapters = totalChapters > 0 ? totalChapters : novel.totalChapters;
 		novel.status = status ?? novel.status ?? "Unknown";
 		novel.isMetadataLoaded = true;
+		return novel;
+	}
 
+	async downloadNovel(novel: NovelT, preDownloadedChapters: ChapterT[] = []): Promise<NovelT> {
+		const response = await invoke<string>('download_novel', { source: this.id, url: novel.url });
 		return novel;
 	}
 
@@ -96,7 +101,7 @@ export class NovelFull extends NovelSource {
 			if (thumbnailURL) thumbnailURL = `${this.url}${thumbnailURL}`;
 
 			const novel: NovelT = {
-				id: url,
+				id: hashString(url),
 				source: this.id,
 				url,
 				title,
@@ -104,6 +109,7 @@ export class NovelFull extends NovelSource {
 				genres: [],
 				alternativeTitles: [],
 				thumbnailURL,
+				downloadedChapters: 0,
 				isDownloaded: false,
 				isInLibrary: false,
 				isFavorite: false,
@@ -112,5 +118,35 @@ export class NovelFull extends NovelSource {
 			novels.push(novel);
 		});
 		return novels;
+	}
+
+	private async getChapterContent(chapter: ChapterT): Promise<ChapterT> {
+		const chapterContent = await invoke<string>('fetch_html', { url: chapter.url });
+		if (!chapterContent) throw new Error('Failed to fetch chapter content');
+		const $ = cheerio.load(chapterContent);
+
+		const contentEl = $("#chapter-content");
+		contentEl.find("script").remove();
+		contentEl.find("iframe").remove();
+
+		let content = contentEl.html();
+		if (!content) throw new Error("Chapter content not found");
+		content = content
+			?.replace(/class=".*?"/g, "")
+			.replace(/id=".*?"/g, "")
+			.replace(/style=".*?"/g, "")
+			.replace(/data-.*?=".*?"/g, "")
+			.replace(/<!--.*?-->/g, "")
+			.replace(
+				/<div align="left"[\s\S]*?If you find any errors \( Ads popup, ads redirect, broken links, non-standard content, etc.. \)[\s\S]*?<\/div>/g,
+				""
+			);
+
+		const titleHTML = `<h1>${chapter.title}</h1>`;
+		const propagandaHTML = NovelSource.getPropagandaHTML();
+
+		content = `${titleHTML}\n${content}\n${propagandaHTML}`;
+		chapter.content = content;
+		return chapter;
 	}
 }

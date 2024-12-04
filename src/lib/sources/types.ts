@@ -1,3 +1,9 @@
+export type ChapterT = {
+	title: string;
+	url: string;
+	content?: string;
+}
+
 export type NovelT = {
 	id: string;
 	source: string;
@@ -6,18 +12,18 @@ export type NovelT = {
 	authors: string[];
 	genres: string[];
 	alternativeTitles: string[];
-	isDownloaded: boolean;
-	isInLibrary: boolean;
-	isFavorite: boolean;
-	isMetadataLoaded: boolean;
 	description?: string;
 	coverURL?: string;
 	thumbnailURL?: string;
 	latestChapterTitle?: string;
 	totalChapters?: number;
-	downloadedChapters?: number;
 	status?: string;
 	rating?: string;
+	downloadedChapters: number;
+	isDownloaded: boolean;
+	isInLibrary: boolean;
+	isFavorite: boolean;
+	isMetadataLoaded: boolean;
 }
 
 export type NovelSourceProps = {
@@ -48,5 +54,15 @@ export class NovelSource {
 
 	async updateNovelMetadata(novel: NovelT): Promise<NovelT> {
 		throw new Error(`${this.name}: 'updateNovelMetadata' method not implemented.`);
+	}
+
+	async downloadNovel(novel: NovelT): Promise<NovelT> {
+		throw new Error(`${this.name}: 'downloadNovel' method not implemented.`);
+	}
+
+	static getPropagandaHTML(): string {
+		return `<br />
+<br />
+<p>This novel was scraped using <a href="https://github.com/HanaDigital/NovelScraper">NovelScraper</a>, a free and open-source novel scraping tool.</p>`;
 	}
 }
