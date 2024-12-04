@@ -24,14 +24,25 @@ use isahc::prelude::*;
 //     pub is_metadata_loaded: bool,
 // }
 
-pub fn download_novel(source: &str, url: &str) -> Result<Vec<String>, String> {
+#[derive(Clone)]
+pub struct Chapter {
+    pub title: String,
+    pub url: String,
+    pub content: Option<String>,
+}
+
+pub async fn download_novel(
+    source: &str,
+    url: &str,
+    batch_size: usize,
+) -> Result<Vec<String>, String> {
     if source == "novelfull" {
-        return novelfull::download_novel(url);
+        return novelfull::download_novel(url, batch_size).await;
     }
     Err(format!("Source {} not found", source))
 }
 
-pub fn fetch_html(url: &str) -> Result<String, String> {
+pub async fn fetch_html(url: &str) -> Result<String, String> {
     let res_result = isahc::get(url);
     let mut res = match res_result {
         Ok(res) => res,

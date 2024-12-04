@@ -1,13 +1,13 @@
 mod source;
 
 #[tauri::command]
-fn download_novel(source: &str, url: &str) -> Result<Vec<String>, String> {
-    source::download_novel(source, url)
+async fn download_novel(source: &str, url: &str, batch_size: usize) -> Result<Vec<String>, String> {
+    source::download_novel(source, url, batch_size).await
 }
 
 #[tauri::command]
-fn fetch_html(url: &str) -> Result<String, String> {
-    source::fetch_html(url)
+async fn fetch_html(url: &str) -> Result<String, String> {
+    source::fetch_html(url).await
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

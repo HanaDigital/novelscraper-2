@@ -83,7 +83,7 @@ export class NovelFull extends NovelSource {
 	}
 
 	async downloadNovel(novel: NovelT, preDownloadedChapters: ChapterT[] = []): Promise<NovelT> {
-		const response = await invoke<string>('download_novel', { source: this.id, url: novel.url });
+		const response = await invoke<string>('download_novel', { source: this.id, url: novel.url, batch_size: 10 });
 		return novel;
 	}
 
