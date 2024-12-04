@@ -7,7 +7,7 @@ import { useAtom } from 'jotai/react';
 import { appStateAtom } from '@/lib/store';
 import * as path from '@tauri-apps/api/path';
 import Page from '@/components/page';
-import { createLibraryPath } from '@/lib/library';
+import { createLibraryDir } from '@/lib/library';
 import { InfoCircle } from '@mynaui/icons-react';
 
 export const Route = createFileRoute('/settings')({
@@ -28,7 +28,7 @@ function RouteComponent() {
 		});
 		if (!dir) return;
 		const newLibraryRootPath = await path.join(dir, "NovelScraper-Library");
-		await createLibraryPath(newLibraryRootPath);
+		await createLibraryDir(newLibraryRootPath);
 		setAppState((state) => {
 			state.libraryRootPath = newLibraryRootPath;
 			return state;

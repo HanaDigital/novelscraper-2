@@ -5,16 +5,23 @@ import { SourceIDsT, SOURCES } from "./sources/sources";
 
 export type AppStateT = {
 	key: string;
-	initialized: boolean;
 	isSidePanelOpen: boolean;
 	libraryRootPath: string;
 }
 export const appStateAtom = atomWithImmer<AppStateT>({
 	key: 'appState',
-	initialized: false,
 	isSidePanelOpen: true,
 	libraryRootPath: "",
 })
+
+export type LibraryStateT = {
+	key: string;
+	novels: { [key: string]: NovelT };
+}
+export const libraryStateAtom = atomWithImmer<LibraryStateT>({
+	key: 'libraryState',
+	novels: {},
+});
 
 
 type searchHistoryT = { [key in SourceIDsT]: NovelT[]; }

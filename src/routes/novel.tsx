@@ -2,13 +2,13 @@ import Loader from "@/components/loader";
 import Page from "@/components/page";
 import { SourceIDsT, SOURCES } from "@/lib/sources/sources";
 import { NovelT } from "@/lib/sources/types";
-import { activeNovelAtom, searchHistoryAtom } from "@/lib/store";
+import { activeNovelAtom, libraryStateAtom, searchHistoryAtom } from "@/lib/store";
 import { createFileRoute } from '@tanstack/react-router'
 import { useAtom, useSetAtom } from "jotai/react";
 import { useEffect, useState } from "react";
 import clone from "clone";
 import { Button } from "@/components/ui/button";
-import { Download } from "@mynaui/icons-react";
+import { BookmarkPlus, Download } from "@mynaui/icons-react";
 
 export const Route = createFileRoute('/novel')({
 	component: RouteComponent,
@@ -17,6 +17,7 @@ export const Route = createFileRoute('/novel')({
 function RouteComponent() {
 	const [activeNovel, setActiveNovel] = useAtom(activeNovelAtom);
 	const setSearchHistory = useSetAtom(searchHistoryAtom);
+	const setLibraryState = useSetAtom(libraryStateAtom);
 	const [novel, setNovel] = useState<NovelT>();
 
 	useEffect(() => {
@@ -28,7 +29,10 @@ function RouteComponent() {
 		if (!activeNovel.isMetadataLoaded) {
 			const novelSource = SOURCES[activeNovel.source as SourceIDsT];
 			await new Promise((resolve) => setTimeout(resolve, 500));
-			const updatedNovel = await novelSource.updateNovelMetadata(clone(activeNovel));
+			const updatedNovel = await novelSource.getNovelMetadata(clone(activeNovel));
+			updatedNovel.isMetadataLoaded = true;
+			updatedNovel.updatedMetadataAt = new Date().toISOString();
+			if (updatedNovel.totalChapters !== activeNovel.totalChapters) updatedNovel.updatedChaptersAt = new Date().toISOString();
 			setSearchHistory((state) => {
 				let novels = state[activeNovel.source as SourceIDsT];
 				let novelIndex = novels.findIndex((n) => n.id === activeNovel.id);
@@ -42,6 +46,17 @@ function RouteComponent() {
 		}
 	}
 
+	const handleAddToLibrary = async () => {
+		if (!novel) return;
+		const libNovel = clone(novel);
+		libNovel.isInLibrary = true;
+		libNovel.addedToLibraryAt = new Date().toISOString();
+		setLibraryState((library) => {
+			library.novels[libNovel.id] = libNovel;
+		});
+		setNovel(libNovel);
+	}
+
 	const handleDownload = async () => {
 		if (!novel) return;
 		const novelSource = SOURCES[novel.source as SourceIDsT];
@@ -53,6 +68,7 @@ function RouteComponent() {
 	return (
 		<Page>
 			<Button size="icon" onClick={handleDownload}><Download /></Button>
+			<Button size="icon" onClick={handleAddToLibrary}><BookmarkPlus /></Button>
 			<img src={novel.coverURL || novel.thumbnailURL} alt="Novel Cover" />
 			<h1>{novel.title}</h1>
 			<p>{novel.description}</p>

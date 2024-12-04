@@ -24,6 +24,10 @@ export type NovelT = {
 	isInLibrary: boolean;
 	isFavorite: boolean;
 	isMetadataLoaded: boolean;
+	addedToLibraryAt?: string;
+	updatedMetadataAt?: string;
+	updatedChaptersAt?: string;
+	downloadedAt?: string;
 }
 
 export type NovelSourceProps = {
@@ -52,7 +56,7 @@ export class NovelSource {
 		throw new Error(`${this.name}: 'searchNovels' method not implemented.`);
 	}
 
-	async updateNovelMetadata(novel: NovelT): Promise<NovelT> {
+	async getNovelMetadata(novel: NovelT): Promise<NovelT> {
 		throw new Error(`${this.name}: 'updateNovelMetadata' method not implemented.`);
 	}
 

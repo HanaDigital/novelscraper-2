@@ -3,21 +3,27 @@ import { SmallP, TinyP } from "./typography";
 import { useSetAtom } from "jotai/react";
 import { activeNovelAtom } from "@/lib/store";
 import { NovelT } from "@/lib/sources/types";
+import { Bookmark, BookmarkSolid } from "@mynaui/icons-react";
+import { Badge } from "./ui/badge";
 
 type NovelCardProps = {
 	href: string;
 	novel: NovelT;
+	highlightInLibrary?: boolean;
 }
-export default function NovelCard({ href, novel }: NovelCardProps) {
+export default function NovelCard({ href, novel, highlightInLibrary = false }: NovelCardProps) {
 	const setActiveNovel = useSetAtom(activeNovelAtom);
 
 	return (
 		<Link
-			className="flex flex-col gap-3 group rounded-lg bg-card border p-2 pb-3 hover:border-primary-foreground"
+			className={`relative flex flex-col gap-3 group rounded-lg bg-card border p-2 pb-3 hover:border-primary`}
 			href={href}
 			onClick={() => setActiveNovel(novel)}
 		>
-			<div className="rounded-lg overflow-hidden w-full h-60 grid place-items-center bg-background border">
+			{(highlightInLibrary && novel.isInLibrary) && <Badge className="absolute top-3 left-3 z-10 text-green-900 p-0">
+				<BookmarkSolid width={20} />
+			</Badge>}
+			<div className="rounded-lg overflow-hidden w-full aspect-auto max-h-80 flex-1 grid place-items-center bg-background border">
 				<img
 					className="group-hover:scale-[1.05] transition-transform w-full"
 					src={novel.coverURL ?? novel.thumbnailURL}

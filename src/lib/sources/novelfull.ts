@@ -19,7 +19,7 @@ export class NovelFull extends NovelSource {
 		return this.getNovelsFromSearchPage(response);
 	}
 
-	async updateNovelMetadata(novel: NovelT): Promise<NovelT> {
+	async getNovelMetadata(novel: NovelT): Promise<NovelT> {
 		const response = await invoke<string>('fetch_html', { url: novel.url });
 		if (!response) throw new Error('Failed to fetch novel');
 		const $ = cheerio.load(response);
@@ -78,7 +78,7 @@ export class NovelFull extends NovelSource {
 		novel.latestChapterTitle = latestChapterTitle ?? novel.latestChapterTitle;
 		novel.totalChapters = totalChapters > 0 ? totalChapters : novel.totalChapters;
 		novel.status = status ?? novel.status ?? "Unknown";
-		novel.isMetadataLoaded = true;
+
 		return novel;
 	}
 

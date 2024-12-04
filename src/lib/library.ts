@@ -1,17 +1,8 @@
 import { message } from "@tauri-apps/plugin-dialog";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import * as path from '@tauri-apps/api/path';
-import { atomWithImmer } from "jotai-immer";
-import { NovelT } from "./sources/types";
 
-export type LibraryT = {
-	novels: NovelT[];
-}
-export const libraryAtom = atomWithImmer<LibraryT>({
-	novels: [],
-});
-
-export const createLibraryPath = async (libraryRootPath: string, subDir = "") => {
+export const createLibraryDir = async (libraryRootPath: string, subDir = "") => {
 	try {
 		const dir = await path.join(libraryRootPath, subDir);
 		const dirExists = await exists(dir);

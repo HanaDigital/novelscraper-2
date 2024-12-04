@@ -6,7 +6,6 @@ import { Button } from "./ui/button";
 import { ChevronLeft } from "@mynaui/icons-react";
 import { useAtomValue } from "jotai/react";
 import { activeNovelAtom } from "@/lib/store";
-import { useEffect } from "react";
 
 export default function Breadcrumbs() {
 	const location = useLocation();
@@ -14,10 +13,6 @@ export default function Breadcrumbs() {
 	const activeNovel = useAtomValue(activeNovelAtom);
 
 	const routeURLs = routes.map((r) => r.url);
-
-	useEffect(() => {
-		console.log("!!!ACTIVE NOVEL", activeNovel);
-	}, [activeNovel]);
 
 	if (location.pathname === "/novel")
 		return <div className="flex items-center gap-2">

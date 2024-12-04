@@ -3,11 +3,10 @@ import Page from '@/components/page'
 import SearchBar from "@/components/search-bar"
 import { SourceIDsT, SOURCES } from '@/lib/sources/sources'
 import { NovelSource } from "@/lib/sources/types"
-import { searchHistoryAtom } from "@/lib/store"
+import { libraryStateAtom, searchHistoryAtom } from "@/lib/store"
 import { createFileRoute, useLocation } from '@tanstack/react-router'
 import { message } from "@tauri-apps/plugin-dialog"
-import { useAtom } from "jotai/react"
-import { CircleDashed } from "lucide-react"
+import { useAtom, useAtomValue } from "jotai/react"
 import { useEffect, useState } from 'react'
 
 export const Route = createFileRoute('/sources/$sourceId')({
@@ -21,6 +20,7 @@ function RouteComponent() {
 	const [source, setSource] = useState<NovelSource>();
 	const [isSearching, setIsSearching] = useState(false);
 	const [searchHistory, setSearchHistory] = useAtom(searchHistoryAtom);
+	const libraryState = useAtomValue(libraryStateAtom);
 
 	useEffect(() => {
 		setSource(SOURCES[sourceId as SourceIDsT]);
@@ -31,7 +31,8 @@ function RouteComponent() {
 		try {
 			setIsSearching(true);
 			await new Promise((resolve) => setTimeout(resolve, 500));
-			const searchedNovels = await source.searchNovels(query);
+			let searchedNovels = await source.searchNovels(query);
+			searchedNovels = searchedNovels.map((n) => libraryState.novels[n.id] ?? n);
 			setSearchHistory((state) => {
 				let novels = state[sourceId as SourceIDsT];
 				searchedNovels.forEach((n) => novels = novels.filter((n2) => n2.id !== n.id));
@@ -60,7 +61,7 @@ function RouteComponent() {
 			<SearchBar
 				handleSearch={handleSearch}
 				handleClear={handleClear}
-				showClear={!!searchHistory[sourceId as SourceIDsT].length}
+				// showClear={!!searchHistory[sourceId as SourceIDsT].length}
 				disabled={isSearching}
 			/>
 
@@ -70,6 +71,7 @@ function RouteComponent() {
 						key={novel.id}
 						href={`/novel?fromRoute=${location.pathname}`}
 						novel={novel}
+						highlightInLibrary
 					/>
 				))}
 			</div>

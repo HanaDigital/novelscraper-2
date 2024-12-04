@@ -5,44 +5,63 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { Fragment, useEffect, useState } from 'react';
 import { load, Store } from '@tauri-apps/plugin-store';
 import { useAtom } from 'jotai/react';
-import { appStateAtom, AppStateT } from '@/lib/store';
+import { appStateAtom, AppStateT, libraryStateAtom, LibraryStateT } from '@/lib/store';
 import Loader from '@/components/loader';
 import * as path from '@tauri-apps/api/path';
-import { createLibraryPath } from '@/lib/library';
+import { createLibraryDir } from '@/lib/library';
 
 export const Route = createRootRoute({
 	component: RootComponent,
 })
 
 function RootComponent() {
+	const [appInitialized, setAppInitialized] = useState(false);
 	const [appStore, setAppStore] = useState<Store>();
 	const [appState, setAppState] = useAtom(appStateAtom);
+	const [libraryState, setLibraryState] = useAtom(libraryStateAtom);
 
 	useEffect(() => {
 		loadStore();
-		// console.log("!!!LOAD");
 	}, []);
 
 	useEffect(() => {
-		if (!appStore) return;
+		if (!appInitialized || !appStore) return;
 		appStore.set(appState.key, appState);
-	}, [appStore, appState]);
+	}, [appInitialized, appStore, appState]);
+
+	useEffect(() => {
+		if (!appInitialized || !appStore) return;
+		appStore.set(libraryState.key, libraryState);
+	}, [appInitialized, appStore, libraryState]);
 
 	const loadStore = async () => {
-		const store = await load('store.json', { autoSave: true });
+		const store = await load('store.json');
 		setAppStore(store);
 
-		let state = await store.get(appState.key) as AppStateT | undefined;
-		if (!state) state = appState;
+		try {
+			let app = await store.get(appState.key) as AppStateT | undefined;
+			if (!app) app = appState;
 
-		state.initialized = true;
-		if (!state.libraryRootPath) state.libraryRootPath = await path.join(await path.documentDir(), "NovelScraper-Library");
-		setAppState(state);
+			if (!app.libraryRootPath) app.libraryRootPath = await path.join(await path.documentDir(), "NovelScraper-Library");
+			setAppState(app);
 
-		await createLibraryPath(state.libraryRootPath);
+			await createLibraryDir(app.libraryRootPath);
+		} catch (e) {
+			console.error(e);
+		}
+
+		try {
+			let library = await store.get(libraryState.key) as LibraryStateT | undefined;
+			if (!library) library = libraryState;
+			setLibraryState(library);
+		} catch (e) {
+			console.error(e);
+		}
+
+		setAppInitialized(true);
 	}
 
-	// if (!appState.initialized) return <Loader />;
+	if (!appInitialized) return <Loader />;
 	return (
 		<Fragment>
 			<SidebarProvider defaultOpen={appState.isSidePanelOpen}>

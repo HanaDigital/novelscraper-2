@@ -13,7 +13,7 @@ function RouteComponent() {
 			{Object.values(SOURCES).map((s) => (
 				<Link
 					key={s.id}
-					className="flex flex-col gap-3 group rounded-lg bg-card border p-2 pb-2 hover:shadow-dark"
+					className="flex flex-col gap-3 group rounded-lg bg-card border p-2 pb-2 hover:border-primary"
 					href={`/sources/${s.id}`}
 				>
 					<div className="rounded-lg overflow-hidden">
