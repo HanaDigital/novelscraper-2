@@ -1,9 +1,9 @@
-import NovelCard from "@/components/novel-card";
+import { CardGridUI, CardUI } from "@/components/card";
 import Page from '@/components/page';
 import SearchBar from "@/components/search-bar";
-import { libraryStateAtom } from "@/lib/store";
+import { activeNovelAtom, libraryStateAtom } from "@/lib/store";
 import { createFileRoute } from '@tanstack/react-router'
-import { useAtomValue } from "jotai/react";
+import { useAtomValue, useSetAtom } from "jotai/react";
 
 export const Route = createFileRoute('/library')({
 	component: RouteComponent,
@@ -11,6 +11,7 @@ export const Route = createFileRoute('/library')({
 
 function RouteComponent() {
 	const libraryState = useAtomValue(libraryStateAtom);
+	const setActiveNovel = useSetAtom(activeNovelAtom);
 
 	const handleSearch = async (query: string) => {
 
@@ -28,16 +29,18 @@ function RouteComponent() {
 			// showClear={!!searchHistory[sourceId as SourceIDsT].length}
 			// disabled={isSearching}
 			/>
-
-			<div className="grid grid-cols-3 gap-4">
+			<CardGridUI>
 				{Object.values(libraryState.novels).map((novel) => (
-					<NovelCard
+					<CardUI
 						key={novel.id}
 						href={`/novel?fromRoute=${location.pathname}`}
-						novel={novel}
+						imageURL={novel.coverURL ?? novel.thumbnailURL ?? ""}
+						title={novel.title}
+						subTitle={novel.authors.join(', ')}
+						onClick={() => setActiveNovel(novel)}
 					/>
 				))}
-			</div>
+			</CardGridUI>
 		</Page>
 	);
 }

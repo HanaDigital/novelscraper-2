@@ -1,7 +1,11 @@
 mod source;
 
 #[tauri::command]
-async fn download_novel(source: &str, url: &str, batch_size: usize) -> Result<Vec<String>, String> {
+async fn download_novel(
+    source: &str,
+    url: &str,
+    batch_size: usize,
+) -> Result<Vec<source::Chapter>, String> {
     source::download_novel(source, url, batch_size).await
 }
 

@@ -24,7 +24,7 @@ use isahc::prelude::*;
 //     pub is_metadata_loaded: bool,
 // }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, serde::Serialize)]
 pub struct Chapter {
     pub title: String,
     pub url: String,
@@ -35,7 +35,7 @@ pub async fn download_novel(
     source: &str,
     url: &str,
     batch_size: usize,
-) -> Result<Vec<String>, String> {
+) -> Result<Vec<Chapter>, String> {
     if source == "novelfull" {
         return novelfull::download_novel(url, batch_size).await;
     }

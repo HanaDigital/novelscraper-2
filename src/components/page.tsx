@@ -11,7 +11,7 @@ export default function Page({ children, className }: PageProps) {
 			<div className="px-4 pt-3">
 				<Breadcrumbs />
 			</div>
-			<div className={`max-w-3xl px-4 pt-2 pb-6 overflow-auto flex flex-col gap-5 ${className}`}>
+			<div className={`px-4 pt-2 pb-6 overflow-auto flex flex-col gap-5 ${className}`}>
 				{children}
 			</div>
 		</main>

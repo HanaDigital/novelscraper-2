@@ -1,12 +1,14 @@
-import NovelCard from "@/components/novel-card"
+import { CardUI, CardGridUI } from "@/components/card"
 import Page from '@/components/page'
 import SearchBar from "@/components/search-bar"
+import { Badge } from "@/components/ui/badge"
 import { SourceIDsT, SOURCES } from '@/lib/sources/sources'
 import { NovelSource } from "@/lib/sources/types"
-import { libraryStateAtom, searchHistoryAtom } from "@/lib/store"
+import { activeNovelAtom, libraryStateAtom, searchHistoryAtom } from "@/lib/store"
+import { BookmarkSolid } from "@mynaui/icons-react"
 import { createFileRoute, useLocation } from '@tanstack/react-router'
 import { message } from "@tauri-apps/plugin-dialog"
-import { useAtom, useAtomValue } from "jotai/react"
+import { useAtom, useAtomValue, useSetAtom } from "jotai/react"
 import { useEffect, useState } from 'react'
 
 export const Route = createFileRoute('/sources/$sourceId')({
@@ -21,6 +23,7 @@ function RouteComponent() {
 	const [isSearching, setIsSearching] = useState(false);
 	const [searchHistory, setSearchHistory] = useAtom(searchHistoryAtom);
 	const libraryState = useAtomValue(libraryStateAtom);
+	const setActiveNovel = useSetAtom(activeNovelAtom);
 
 	useEffect(() => {
 		setSource(SOURCES[sourceId as SourceIDsT]);
@@ -65,16 +68,23 @@ function RouteComponent() {
 				disabled={isSearching}
 			/>
 
-			<div className="grid grid-cols-3 gap-4">
+			<CardGridUI>
 				{searchHistory[sourceId as SourceIDsT].map((novel) => (
-					<NovelCard
+					<CardUI
 						key={novel.id}
 						href={`/novel?fromRoute=${location.pathname}`}
-						novel={novel}
-						highlightInLibrary
+						imageURL={novel.coverURL ?? novel.thumbnailURL ?? ""}
+						title={novel.title}
+						subTitle={novel.authors.join(', ')}
+						badge={novel.isInLibrary &&
+							<Badge className="absolute top-3 left-3 z-10 text-green-900 p-0">
+								<BookmarkSolid width={20} />
+							</Badge>
+						}
+						onClick={() => setActiveNovel(novel)}
 					/>
 				))}
-			</div>
+			</CardGridUI>
 		</Page>
 	)
 }
