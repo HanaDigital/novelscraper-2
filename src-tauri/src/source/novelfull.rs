@@ -1,19 +1,19 @@
+use super::Chapter;
+use futures::future::join_all;
+use kuchikiki::traits::*;
 use std::{cmp::min, vec};
 
-use futures::{future::join_all, FutureExt};
-use kuchikiki::{traits::*, NodeRef};
-
-use super::Chapter;
-
-const NOVELFULL_URL: &str = "https://novelfull.com";
-
-pub async fn download_novel(url: &str, batch_size: usize) -> Result<Vec<Chapter>, String> {
-    let total_pages = get_total_pages(&url).await;
+pub async fn download_novel(
+    source_url: &str,
+    novel_url: &str,
+    batch_size: usize,
+) -> Result<Vec<Chapter>, String> {
+    let total_pages = get_total_pages(&novel_url).await;
 
     let mut chapters: Vec<super::Chapter> = vec![];
     for page_num in 1..=total_pages {
         // Get all the chapters on the current page
-        let mut page_chapters = get_page_chapter_urls(&url, page_num).await;
+        let mut page_chapters = get_page_chapter_urls(&source_url, &novel_url, page_num).await;
 
         let mut batch_index: usize = 0;
         while (batch_index * batch_size) < page_chapters.len() {
@@ -43,8 +43,8 @@ pub async fn download_novel(url: &str, batch_size: usize) -> Result<Vec<Chapter>
     Ok(chapters)
 }
 
-async fn get_total_pages(url: &str) -> usize {
-    let novel_html = super::fetch_html(url).await.unwrap();
+async fn get_total_pages(novel_url: &str) -> usize {
+    let novel_html = super::fetch_html(novel_url).await.unwrap();
     let document = kuchikiki::parse_html().one(novel_html);
 
     let mut total_pages = 1;
@@ -73,8 +73,12 @@ async fn get_total_pages(url: &str) -> usize {
     return total_pages;
 }
 
-async fn get_page_chapter_urls(url: &str, page: usize) -> Vec<super::Chapter> {
-    let page_html = super::fetch_html(&format!("{}?page={}", url, page))
+async fn get_page_chapter_urls(
+    source_url: &str,
+    novel_url: &str,
+    page: usize,
+) -> Vec<super::Chapter> {
+    let page_html = super::fetch_html(&format!("{}?page={}", novel_url, page))
         .await
         .unwrap();
     let document = kuchikiki::parse_html().one(page_html);
@@ -94,7 +98,7 @@ async fn get_page_chapter_urls(url: &str, page: usize) -> Vec<super::Chapter> {
                 .to_string();
             let chapter = super::Chapter {
                 title,
-                url: format!("{}{}", NOVELFULL_URL, url),
+                url: format!("{}{}", source_url, url),
                 content: None,
             };
             page_chapters.push(chapter);

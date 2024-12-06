@@ -8,7 +8,7 @@ import { useAtom } from 'jotai/react';
 import { appStateAtom, AppStateT, libraryStateAtom, LibraryStateT } from '@/lib/store';
 import Loader from '@/components/loader';
 import * as path from '@tauri-apps/api/path';
-import { createLibraryDir } from '@/lib/library';
+import { createLibraryDir } from '@/lib/library/library';
 
 export const Route = createRootRoute({
 	component: RootComponent,

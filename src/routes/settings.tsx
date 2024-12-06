@@ -7,7 +7,7 @@ import { useAtom } from 'jotai/react';
 import { appStateAtom } from '@/lib/store';
 import * as path from '@tauri-apps/api/path';
 import Page from '@/components/page';
-import { createLibraryDir } from '@/lib/library';
+import { createLibraryDir } from '@/lib/library/library';
 import { InfoCircle } from '@mynaui/icons-react';
 
 export const Route = createFileRoute('/settings')({

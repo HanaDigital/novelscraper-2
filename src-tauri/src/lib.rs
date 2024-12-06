@@ -1,12 +1,13 @@
 mod source;
 
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 async fn download_novel(
-    source: &str,
-    url: &str,
+    source_id: &str,
+    source_url: &str,
+    novel_url: &str,
     batch_size: usize,
 ) -> Result<Vec<source::Chapter>, String> {
-    source::download_novel(source, url, batch_size).await
+    source::download_novel(source_id, source_url, novel_url, batch_size).await
 }
 
 #[tauri::command]
