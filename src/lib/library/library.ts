@@ -1,6 +1,8 @@
 import { message } from "@tauri-apps/plugin-dialog";
-import { exists, mkdir } from "@tauri-apps/plugin-fs";
+import { exists, mkdir, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import * as path from '@tauri-apps/api/path';
+import { NovelT } from "../sources/types";
+import { invoke } from "@tauri-apps/api/core";
 
 export const createLibraryDir = async (libraryRootPath: string, subDir = "") => {
 	try {
@@ -11,4 +13,45 @@ export const createLibraryDir = async (libraryRootPath: string, subDir = "") => 
 		console.error(e);
 		await message("Couldn't create library root folder!", { title: 'NovelScraper Library', kind: 'error' });
 	}
+}
+
+export const saveNovelEpub = async (novel: NovelT, epub: Uint8Array, libraryRootPath: string) => {
+	try {
+		const dir = await path.join(libraryRootPath, novel.source);
+		const dirExists = await exists(dir);
+		if (!dirExists) await mkdir(dir, { recursive: true });
+
+		const novelFilename = getFilenameFromStr(novel.title) + ".epub";
+		const epubPath = await path.join(dir, novelFilename);
+		await writeFile(epubPath, epub);
+
+	} catch (e) {
+		console.error(e);
+		await message("Couldn't save novel epub!", { title: 'NovelScraper Library', kind: 'error' });
+	}
+}
+
+export const saveNovelCover = async (novel: NovelT) => {
+	try {
+		const coverURL = novel.coverURL ?? novel.thumbnailURL;
+		if (!coverURL) return;
+		const dir = await path.appDataDir();
+		const novelDir = await path.join(dir, "novel-data", novel.source as string, novel.id);
+		const dirExists = await exists(novelDir);
+		if (!dirExists) await mkdir(novelDir, { recursive: true });
+
+		const cover = new Uint8Array(await invoke<ArrayBuffer>("fetch_image", { url: coverURL }));
+		console.log(cover);
+		const coverPath = await path.join(novelDir, "cover.png");
+		await writeFile(coverPath, cover);
+		console.log(coverPath);
+		return coverPath;
+	} catch (e) {
+		console.error(e);
+		await message("Couldn't save novel cover!", { title: 'NovelScraper Library', kind: 'error' });
+	}
+}
+
+export const getFilenameFromStr = (str: string) => {
+	return str.replace(/[^a-zA-Z0-9]/g, "_");
 }

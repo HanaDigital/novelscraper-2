@@ -2,13 +2,16 @@ import Loader from "@/components/loader";
 import Page from "@/components/page";
 import { SourceIDsT, SOURCES } from "@/lib/sources/sources";
 import { NovelT } from "@/lib/sources/types";
-import { activeNovelAtom, libraryStateAtom, searchHistoryAtom } from "@/lib/store";
+import { activeNovelAtom, appStateAtom, libraryStateAtom, searchHistoryAtom } from "@/lib/store";
 import { createFileRoute } from '@tanstack/react-router'
-import { useAtom, useSetAtom } from "jotai/react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai/react";
 import { useEffect, useState } from "react";
 import clone from "clone";
 import { Button } from "@/components/ui/button";
 import { BookmarkPlus, Download } from "@mynaui/icons-react";
+import { saveNovelCover, saveNovelEpub } from "@/lib/library/library";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import EpubTemplate from "@/lib/library/epub";
 
 export const Route = createFileRoute('/novel')({
 	component: RouteComponent,
@@ -19,57 +22,88 @@ function RouteComponent() {
 	const setSearchHistory = useSetAtom(searchHistoryAtom);
 	const setLibraryState = useSetAtom(libraryStateAtom);
 	const [novel, setNovel] = useState<NovelT>();
+	const [coverSrc, setCoverSrc] = useState<string>();
+	const [isLoading, setIsLoading] = useState(false);
+	const appState = useAtomValue(appStateAtom);
 
 	useEffect(() => {
 		loadNovelMetadata();
 	}, []);
 
 	const loadNovelMetadata = async () => {
-		if (!activeNovel) return;
-		if (!activeNovel.isMetadataLoaded) {
-			const novelSource = SOURCES[activeNovel.source as SourceIDsT];
-			await new Promise((resolve) => setTimeout(resolve, 500));
-			const updatedNovel = await novelSource.getNovelMetadata(clone(activeNovel));
-			updatedNovel.isMetadataLoaded = true;
-			updatedNovel.updatedMetadataAt = new Date().toISOString();
-			if (updatedNovel.totalChapters !== activeNovel.totalChapters) updatedNovel.updatedChaptersAt = new Date().toISOString();
-			setSearchHistory((state) => {
-				let novels = state[activeNovel.source as SourceIDsT];
-				let novelIndex = novels.findIndex((n) => n.id === activeNovel.id);
-				novels[novelIndex] = updatedNovel;
-			});
-			setNovel(updatedNovel);
-			setActiveNovel(updatedNovel);
-		} else {
-			setNovel(activeNovel);
-			setActiveNovel(activeNovel);
+		try {
+			if (!activeNovel) return;
+			let _novel = activeNovel;
+			if (!_novel.isMetadataLoaded) {
+				const novelSource = SOURCES[_novel.source as SourceIDsT];
+				await new Promise((resolve) => setTimeout(resolve, 500));
+				_novel = await novelSource.getNovelMetadata(clone(_novel));
+				_novel.isMetadataLoaded = true;
+				_novel.updatedMetadataAt = new Date().toISOString();
+				if (_novel.totalChapters !== _novel.totalChapters) _novel.updatedChaptersAt = new Date().toISOString();
+				setSearchHistory((state) => {
+					let novels = state[_novel.source as SourceIDsT];
+					let novelIndex = novels.findIndex((n) => n.id === _novel.id);
+					novels[novelIndex] = _novel;
+				});
+			}
+
+			if (_novel.localCoverPath) {
+				const src = convertFileSrc(_novel.localCoverPath);
+				setCoverSrc(src);
+			} else {
+				setCoverSrc(_novel.coverURL ?? _novel.thumbnailURL);
+			}
+
+			updateState(_novel);
+		} catch (e) {
+			console.error(e);
 		}
 	}
 
 	const handleAddToLibrary = async () => {
-		if (!novel) return;
-		const libNovel = clone(novel);
-		libNovel.isInLibrary = true;
-		libNovel.addedToLibraryAt = new Date().toISOString();
-		setLibraryState((library) => {
-			library.novels[libNovel.id] = libNovel;
-		});
-		setNovel(libNovel);
+		try {
+			if (!novel) return;
+			setIsLoading(true);
+			const libNovel = clone(novel);
+			libNovel.isInLibrary = true;
+			libNovel.addedToLibraryAt = new Date().toISOString();
+			const localCoverPath = await saveNovelCover(libNovel);
+			libNovel.localCoverPath = localCoverPath;
+			updateState(libNovel);
+		} catch (e) {
+			console.error(e);
+		}
+		setIsLoading(false);
 	}
 
 	const handleDownload = async () => {
-		if (!novel) return;
-		const novelSource = SOURCES[novel.source as SourceIDsT];
-		await new Promise((resolve) => setTimeout(resolve, 500));
-		const downloadedNovel = await novelSource.downloadNovel(novel);
+		try {
+			if (!novel) return;
+			const novelSource = SOURCES[novel.source as SourceIDsT];
+			await new Promise((resolve) => setTimeout(resolve, 500));
+			const chapters = await novelSource.downloadNovel(novel);
+			const epub = await EpubTemplate.generateEpub(novel, chapters);
+			await saveNovelEpub(novel, epub, appState.libraryRootPath);
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
-	if (!novel) return <Loader />
+	const updateState = async (novel: NovelT) => {
+		setLibraryState((library) => {
+			library.novels[novel.id] = novel;
+		});
+		setActiveNovel(novel);
+		setNovel(novel);
+	}
+
+	if (!novel || isLoading) return <Loader />
 	return (
 		<Page>
 			<Button size="icon" onClick={handleDownload}><Download /></Button>
 			<Button size="icon" onClick={handleAddToLibrary}><BookmarkPlus /></Button>
-			<img src={novel.coverURL || novel.thumbnailURL} alt="Novel Cover" />
+			<img src={coverSrc} alt="Novel Cover" />
 			<h1>{novel.title}</h1>
 			<p>{novel.description}</p>
 			<p>Author: {novel.authors.join(', ')}</p>

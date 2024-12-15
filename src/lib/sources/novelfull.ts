@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import { ChapterT, NovelSource, NovelSourceProps, NovelT } from "./types";
 import { invoke } from "@tauri-apps/api/core";
 import { hashString } from "../utils";
+import { testChapters } from "./test_chapters";
 
 export class NovelFull extends NovelSource {
 
@@ -81,12 +82,11 @@ export class NovelFull extends NovelSource {
 		return novel;
 	}
 
-	async downloadNovel(novel: NovelT): Promise<NovelT> {
-		const response = await invoke<string>('download_novel', { source_id: this.id, source_url: this.url, novel_url: novel.url, batch_size: 10 });
-
-
-
-		return novel;
+	async downloadNovel(novel: NovelT): Promise<ChapterT[]> {
+		// TODO: REPLACE
+		// const response = await invoke<string>('download_novel', { source_id: this.id, source_url: this.url, novel_url: novel.url, batch_size: 10 });
+		const response = testChapters;
+		return response;
 	}
 
 	private async getNovelsFromSearchPage(html: string): Promise<NovelT[]> {

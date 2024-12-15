@@ -1,5 +1,7 @@
 pub mod novelfull;
 
+use std::io::Read;
+
 use isahc::prelude::*;
 
 #[derive(Clone, Debug, serde::Serialize)]
@@ -32,6 +34,23 @@ pub async fn fetch_html(url: &str) -> Result<String, String> {
     let text_result = res.text();
     match text_result {
         Ok(text) => Ok(text),
+        Err(e) => {
+            return Err(e.to_string());
+        }
+    }
+}
+
+pub async fn fetch_image(url: &str) -> Result<Vec<u8>, String> {
+    let res_result = isahc::get(url);
+    let mut res = match res_result {
+        Ok(res) => res,
+        Err(e) => {
+            return Err(e.to_string());
+        }
+    };
+    let bytes_result = res.bytes();
+    match bytes_result {
+        Ok(bytes) => Ok(bytes),
         Err(e) => {
             return Err(e.to_string());
         }

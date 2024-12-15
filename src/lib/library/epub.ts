@@ -1,80 +1,40 @@
-import { ChapterT } from "@/lib/sources/types";
+import { ChapterT, NovelT } from "@/lib/sources/types";
+import { readFile } from "@tauri-apps/plugin-fs";
+import JSZip from "jszip";
 
-class EpubTemplate {
-	//   static Future<Archive> getArchive(Novel novel, List<Chapter> chapters) async {
-	//     Archive archive = Archive();
+export default class EpubTemplate {
 
-	//     final title = novel.title;
-	//     final authors = novel.authors;
-	//     final description = novel.description ?? "";
-	//     final genres = novel.genres;
+	static generateEpub = async (novel: NovelT, chapters: ChapterT[]) => {
+		const zip = new JSZip();
+		zip.file("mimetype", EpubTemplate._mimeType());
 
-	//     // Root
-	//     ArchiveFile mimetype = ArchiveFile("mimetype", _mimeType().length, _mimeType());
-	//     archive.addFile(mimetype);
+		const metaInfFolder = zip.folder("META-INF");
+		if (!metaInfFolder) throw new Error("Couldn't create META-INF folder");
+		metaInfFolder.file("container.xml", EpubTemplate._container());
 
-	//     // META-INF
-	//     ArchiveFile container = ArchiveFile("META-INF/container.xml", _container().length, _container());
-	//     archive.addFile(container);
+		const oebpfFolder = zip.folder("OEBPF");
+		if (!oebpfFolder) throw new Error("Couldn't create OEBPF folder");
+		oebpfFolder.file("cover.xhtml", EpubTemplate._coverXHTML(novel.title));
+		oebpfFolder.file("ebook.opf", EpubTemplate._ebookOPF(novel.title, novel.authors, novel.description || "No description.", novel.genres, chapters));
+		oebpfFolder.file("navigation.ncx", EpubTemplate._navigationNCX(novel.title, novel.authors, chapters));
+		oebpfFolder.folder("css")?.file("ebook.css", EpubTemplate._ebookCSS());
 
-	//     // OEBPF
-	//     ArchiveFile coverXHTML = ArchiveFile(
-	//       "OEBPF/cover.xhtml",
-	//       _coverXHTML(title).length,
-	//       _coverXHTML(title),
-	//     );
-	//     archive.addFile(coverXHTML);
-	//     ArchiveFile ebookOPF = ArchiveFile(
-	//       "OEBPF/ebook.opf",
-	//       _ebookOPF(title, authors, description, genres, chapters).length,
-	//       _ebookOPF(title, authors, description, genres, chapters),
-	//     );
-	//     archive.addFile(ebookOPF);
-	//     ArchiveFile navigationNCX = ArchiveFile(
-	//       "OEBPF/navigation.ncx",
-	//       _navigationNCX(title, authors, chapters).length,
-	//       _navigationNCX(title, authors, chapters),
-	//     );
-	//     archive.addFile(navigationNCX);
+		const oebpfContentFolder = oebpfFolder.folder("content");
+		if (!oebpfContentFolder) throw new Error("Couldn't create OEBPF/content folder");
+		chapters.forEach((chapter, i) => {
+			const id = i + 1;
+			oebpfContentFolder.file("s${id}.xhtml", EpubTemplate._sIdXHTML(id, novel.title, novel.authors, novel.genres, chapter));
+		});
 
-	//     // OEBPF/css
-	//     ArchiveFile ebookCSS = ArchiveFile(
-	//       "OEBPF/css/ebook.css",
-	//       _ebookCSS().length,
-	//       _ebookCSS(),
-	//     );
-	//     archive.addFile(ebookCSS);
+		if (novel.localCoverPath) {
+			const oebpfImagesFolder = oebpfFolder.folder("images");
+			if (!oebpfImagesFolder) throw new Error("Couldn't create OEBPF/images folder");
+			const coverImage = await readFile(novel.localCoverPath);
+			oebpfImagesFolder.file("cover.jpeg", coverImage);
+		}
 
-	//     // OEBPF/content
-	//     ArchiveFile tocXHTML = ArchiveFile(
-	//       "OEBPF/content/toc.xhtml",
-	//       _tocXHTML(chapters).length,
-	//       _tocXHTML(chapters),
-	//     );
-	//     archive.addFile(tocXHTML);
-	//     chapters.asMap().entries.forEach((entry) {
-	//       final id = entry.key + 1;
-	//       final chapter = entry.value;
-	//       final sIdXHTML = ArchiveFile(
-	//         "OEBPF/content/s$id.xhtml",
-	//         _sIdXHTML(id, title, authors, genres, chapter).length,
-	//         _sIdXHTML(id, title, authors, genres, chapter),
-	//       );
-	//       archive.addFile(sIdXHTML);
-	//     });
-
-	//     // OEBPF/images
-	//     final imageURL = novel.coverURL ?? novel.thumbnailURL;
-	//     if (imageURL != null) {
-	//       final coverImage = await _coverImage(imageURL);
-	//       if (coverImage != null) {
-	//         ArchiveFile coverImageFile = ArchiveFile("OEBPF/images/cover.jpeg", coverImage.length, coverImage);
-	//         archive.addFile(coverImageFile);
-	//       }
-	//     }
-
-	//     return archive;
-	//   }
+		return await zip.generateAsync({ type: "uint8array" });
+	}
 
 	static _mimeType = () => "application/epub+zip";
 
@@ -139,8 +99,8 @@ ${navPoints}
 
 		chapters.map((chapter, i) => {
 			const id = i + 1;
-			items.push(`	<item id='s${id}' media-type='application/xhtml+xml' href='content/s${id}.xhtml'/>`);
-			itemRefs.push(`	<itemref idref='s${id}'/>`);
+			items.push(`	<item id='s${id}' media-type='application/xhtml+xml' href='content/s${id}.xhtml'/>`)
+			itemRefs.push(`	<itemref idref='s${id}'/>`)
 		});
 
 		items = items.join("\n");

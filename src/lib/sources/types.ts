@@ -15,6 +15,7 @@ export type NovelT = {
 	description?: string;
 	coverURL?: string;
 	thumbnailURL?: string;
+	localCoverPath?: string;
 	latestChapterTitle?: string;
 	totalChapters?: number;
 	status?: string;
@@ -60,7 +61,7 @@ export class NovelSource {
 		throw new Error(`${this.name}: 'updateNovelMetadata' method not implemented.`);
 	}
 
-	async downloadNovel(novel: NovelT): Promise<NovelT> {
+	async downloadNovel(novel: NovelT): Promise<ChapterT[]> {
 		throw new Error(`${this.name}: 'downloadNovel' method not implemented.`);
 	}
 
