@@ -1,3 +1,5 @@
+import { SourceIDsT } from "./sources";
+
 export type ChapterT = {
 	title: string;
 	url: string;
@@ -6,7 +8,7 @@ export type ChapterT = {
 
 export type NovelT = {
 	id: string;
-	source: string;
+	source: SourceIDsT;
 	url: string;
 	title: string;
 	authors: string[];
@@ -39,14 +41,14 @@ export type NovelSourceProps = {
 	url: string;
 }
 export class NovelSource {
-	id: string;
+	id: SourceIDsT;
 	name: string;
 	tags: string[];
 	logo: string;
 	url: string;
 
 	constructor({ id, name, tags, logo, url }: NovelSourceProps) {
-		this.id = id;
+		this.id = id as SourceIDsT;
 		this.name = name;
 		this.tags = tags;
 		this.logo = logo;

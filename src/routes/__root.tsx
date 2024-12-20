@@ -21,6 +21,7 @@ function RootComponent() {
 	const [libraryState, setLibraryState] = useAtom(libraryStateAtom);
 
 	useEffect(() => {
+		console.log("!!! App initialized");
 		loadStore();
 	}, []);
 
@@ -31,6 +32,7 @@ function RootComponent() {
 
 	useEffect(() => {
 		if (!appInitialized || !appStore) return;
+		console.log("!!! Setting Library:", libraryState);
 		appStore.set(libraryState.key, libraryState);
 	}, [appInitialized, appStore, libraryState]);
 

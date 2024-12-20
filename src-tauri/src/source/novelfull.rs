@@ -7,6 +7,7 @@ pub async fn download_novel(
     source_url: &str,
     novel_url: &str,
     batch_size: usize,
+    start_from_index: usize,
 ) -> Result<Vec<Chapter>, String> {
     let total_pages = get_total_pages(&novel_url).await;
 
@@ -18,10 +19,17 @@ pub async fn download_novel(
         let mut batch_index: usize = 0;
         while (batch_index * batch_size) < page_chapters.len() {
             // TODO: REPLACE
-            let batch_start = batch_index * batch_size;
+            let mut batch_start = batch_index * batch_size;
             let batch_end = min((batch_index + 1) * batch_size, page_chapters.len());
+            if start_from_index >= batch_end {
+                batch_index += 1;
+                continue;
+            }
+            if (start_from_index > batch_start) {
+                batch_start = start_from_index;
+            }
+
             let chapters_batch = &mut page_chapters[batch_start..batch_end];
-            // let chapters_batch = &mut page_chapters[..=0];
             let chapter_html_futures = chapters_batch
                 .iter()
                 .map(|chapter| super::fetch_html(&chapter.url));

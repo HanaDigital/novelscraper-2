@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import clone from "clone";
 import { Button } from "@/components/ui/button";
 import { BookmarkPlus, Download } from "@mynaui/icons-react";
-import { saveNovelCover, saveNovelEpub } from "@/lib/library/library";
+import { getNovelChapters, saveNovelChapters, saveNovelCover, saveNovelEpub } from "@/lib/library/library";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import EpubTemplate from "@/lib/library/epub";
 
@@ -35,7 +35,7 @@ function RouteComponent() {
 			if (!activeNovel) return;
 			let _novel = activeNovel;
 			if (!_novel.isMetadataLoaded) {
-				const novelSource = SOURCES[_novel.source as SourceIDsT];
+				const novelSource = SOURCES[_novel.source];
 				await new Promise((resolve) => setTimeout(resolve, 500));
 				_novel = await novelSource.getNovelMetadata(clone(_novel));
 				_novel.isMetadataLoaded = true;
@@ -55,7 +55,7 @@ function RouteComponent() {
 				setCoverSrc(_novel.coverURL ?? _novel.thumbnailURL);
 			}
 
-			updateState(_novel);
+			updateState(_novel, false);
 		} catch (e) {
 			console.error(e);
 		}
@@ -70,7 +70,7 @@ function RouteComponent() {
 			libNovel.addedToLibraryAt = new Date().toISOString();
 			const localCoverPath = await saveNovelCover(libNovel);
 			libNovel.localCoverPath = localCoverPath;
-			updateState(libNovel);
+			updateState(libNovel, true);
 		} catch (e) {
 			console.error(e);
 		}
@@ -80,18 +80,27 @@ function RouteComponent() {
 	const handleDownload = async () => {
 		try {
 			if (!novel) return;
-			const novelSource = SOURCES[novel.source as SourceIDsT];
+			const novelSource = SOURCES[novel.source];
 			await new Promise((resolve) => setTimeout(resolve, 500));
-			const chapters = await novelSource.downloadNovel(novel);
+			const libNovel = clone(novel);
+			const preDownloadedChapters = await getNovelChapters(novel);
+			const downloadedChapters = await novelSource.downloadNovel(novel, preDownloadedChapters.length);
+			console.log("!!! Downloaded Chapters", downloadedChapters);
+			const chapters = preDownloadedChapters.concat(downloadedChapters);
+			await saveNovelChapters(novel, chapters);
 			const epub = await EpubTemplate.generateEpub(novel, chapters);
 			await saveNovelEpub(novel, epub, appState.libraryRootPath);
+			libNovel.downloadedChapters = chapters.length;
+			libNovel.isDownloaded = true;
+			libNovel.downloadedAt = new Date().toISOString();
+			updateState(libNovel, true);
 		} catch (e) {
 			console.error(e);
 		}
 	}
 
-	const updateState = async (novel: NovelT) => {
-		setLibraryState((library) => {
+	const updateState = async (novel: NovelT, saveInLibrary = true) => {
+		if (saveInLibrary) setLibraryState((library) => {
 			library.novels[novel.id] = novel;
 		});
 		setActiveNovel(novel);

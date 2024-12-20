@@ -6,8 +6,16 @@ async fn download_novel(
     source_url: &str,
     novel_url: &str,
     batch_size: usize,
+    start_from_index: usize,
 ) -> Result<Vec<source::Chapter>, String> {
-    source::download_novel(source_id, source_url, novel_url, batch_size).await
+    source::download_novel(
+        source_id,
+        source_url,
+        novel_url,
+        batch_size,
+        start_from_index,
+    )
+    .await
 }
 
 #[tauri::command]

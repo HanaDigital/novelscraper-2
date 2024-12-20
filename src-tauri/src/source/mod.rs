@@ -16,9 +16,11 @@ pub async fn download_novel(
     source_url: &str,
     novel_url: &str,
     batch_size: usize,
+    start_from_index: usize,
 ) -> Result<Vec<Chapter>, String> {
     if source_id == "novelfull" {
-        return novelfull::download_novel(source_url, novel_url, batch_size).await;
+        return novelfull::download_novel(source_url, novel_url, batch_size, start_from_index)
+            .await;
     }
     Err(format!("Source {} not found", source_id))
 }

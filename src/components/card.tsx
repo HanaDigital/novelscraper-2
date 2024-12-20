@@ -27,7 +27,7 @@ export function CardUI({ href, imageURL, title, subTitle, badge, onClick = () =>
 			</div>
 			<div className="flex flex-col gap-1">
 				<SmallP className="text-ellipsis text-nowrap overflow-hidden">{title}</SmallP>
-				<TinyP className="text-muted-foreground">{subTitle}</TinyP>
+				<TinyP className="text-muted-foreground text-ellipsis text-nowrap overflow-hidden">{subTitle}</TinyP>
 			</div>
 		</Link>
 	)

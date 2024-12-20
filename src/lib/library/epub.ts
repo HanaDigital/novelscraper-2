@@ -5,27 +5,35 @@ import JSZip from "jszip";
 export default class EpubTemplate {
 
 	static generateEpub = async (novel: NovelT, chapters: ChapterT[]) => {
+		// Root
 		const zip = new JSZip();
 		zip.file("mimetype", EpubTemplate._mimeType());
 
+		// META-INF
 		const metaInfFolder = zip.folder("META-INF");
 		if (!metaInfFolder) throw new Error("Couldn't create META-INF folder");
 		metaInfFolder.file("container.xml", EpubTemplate._container());
 
+		// OEBPF
 		const oebpfFolder = zip.folder("OEBPF");
 		if (!oebpfFolder) throw new Error("Couldn't create OEBPF folder");
 		oebpfFolder.file("cover.xhtml", EpubTemplate._coverXHTML(novel.title));
 		oebpfFolder.file("ebook.opf", EpubTemplate._ebookOPF(novel.title, novel.authors, novel.description || "No description.", novel.genres, chapters));
 		oebpfFolder.file("navigation.ncx", EpubTemplate._navigationNCX(novel.title, novel.authors, chapters));
+
+		// OEBPF/css
 		oebpfFolder.folder("css")?.file("ebook.css", EpubTemplate._ebookCSS());
 
+		// OEBPF/content
 		const oebpfContentFolder = oebpfFolder.folder("content");
 		if (!oebpfContentFolder) throw new Error("Couldn't create OEBPF/content folder");
+		oebpfContentFolder.file("toc.xhtml", EpubTemplate._tocXHTML(chapters));
 		chapters.forEach((chapter, i) => {
 			const id = i + 1;
-			oebpfContentFolder.file("s${id}.xhtml", EpubTemplate._sIdXHTML(id, novel.title, novel.authors, novel.genres, chapter));
+			oebpfContentFolder.file(`s${id}.xhtml`, EpubTemplate._sIdXHTML(id, novel.title, novel.authors, novel.genres, chapter));
 		});
 
+		// OEBPF/images
 		if (novel.localCoverPath) {
 			const oebpfImagesFolder = oebpfFolder.folder("images");
 			if (!oebpfImagesFolder) throw new Error("Couldn't create OEBPF/images folder");

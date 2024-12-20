@@ -1,8 +1,10 @@
 import { message } from "@tauri-apps/plugin-dialog";
 import { exists, mkdir, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import * as path from '@tauri-apps/api/path';
-import { NovelT } from "../sources/types";
+import { ChapterT, NovelT } from "../sources/types";
 import { invoke } from "@tauri-apps/api/core";
+import { SourceIDsT, SOURCES } from "../sources/sources";
+import { load } from "@tauri-apps/plugin-store";
 
 export const createLibraryDir = async (libraryRootPath: string, subDir = "") => {
 	try {
@@ -17,7 +19,8 @@ export const createLibraryDir = async (libraryRootPath: string, subDir = "") => 
 
 export const saveNovelEpub = async (novel: NovelT, epub: Uint8Array, libraryRootPath: string) => {
 	try {
-		const dir = await path.join(libraryRootPath, novel.source);
+		const source = SOURCES[novel.source];
+		const dir = await path.join(libraryRootPath, source.name);
 		const dirExists = await exists(dir);
 		if (!dirExists) await mkdir(dir, { recursive: true });
 
@@ -50,6 +53,31 @@ export const saveNovelCover = async (novel: NovelT) => {
 		console.error(e);
 		await message("Couldn't save novel cover!", { title: 'NovelScraper Library', kind: 'error' });
 	}
+}
+
+export const saveNovelChapters = async (novel: NovelT, chapters: ChapterT[]) => {
+	try {
+		const novelStore = await load(`novel-data/${novel.source}/${novel.id}.json`, { autoSave: false });
+		novelStore.set("chapters", chapters);
+		await novelStore.save();
+		await novelStore.close();
+	} catch (e) {
+		console.error(e);
+		await message("Couldn't save novel chapters!", { title: 'NovelScraper Library', kind: 'error' });
+	}
+}
+
+export const getNovelChapters = async (novel: NovelT) => {
+	try {
+		const novelStore = await load(`novel-data/${novel.source}/${novel.id}.json`, { autoSave: false });
+		const chapters = await novelStore.get("chapters") as ChapterT[] || undefined;
+		await novelStore.close();
+		return chapters ?? [];
+	} catch (e) {
+		console.error(e);
+		await message("Couldn't get novel chapters!", { title: 'NovelScraper Library', kind: 'error' });
+	}
+	return [];
 }
 
 export const getFilenameFromStr = (str: string) => {
