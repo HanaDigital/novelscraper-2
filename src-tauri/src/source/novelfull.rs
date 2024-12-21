@@ -1,12 +1,14 @@
 use super::Chapter;
 use futures::future::join_all;
 use kuchikiki::traits::*;
-use std::{cmp::min, vec};
+use std::time::Duration;
+use std::{cmp::min, thread, vec};
 
 pub async fn download_novel(
     source_url: &str,
     novel_url: &str,
     batch_size: usize,
+    batch_delay: usize,
     start_from_index: usize,
 ) -> Result<Vec<Chapter>, String> {
     let total_pages = get_total_pages(&novel_url).await;
@@ -19,6 +21,7 @@ pub async fn download_novel(
         let mut batch_index: usize = 0;
         while (batch_index * batch_size) < page_chapters.len() {
             // TODO: REPLACE
+            thread::sleep(Duration::from_secs(batch_delay as u64));
             let mut batch_start = batch_index * batch_size;
             let batch_end = min((batch_index + 1) * batch_size, page_chapters.len());
             if start_from_index >= batch_end {

@@ -9,6 +9,7 @@ import { appStateAtom, AppStateT, libraryStateAtom, LibraryStateT } from '@/lib/
 import Loader from '@/components/loader';
 import * as path from '@tauri-apps/api/path';
 import { createLibraryDir } from '@/lib/library/library';
+import clone from "clone";
 
 export const Route = createRootRoute({
 	component: RootComponent,
@@ -32,7 +33,7 @@ function RootComponent() {
 
 	useEffect(() => {
 		if (!appInitialized || !appStore) return;
-		console.log("!!! Setting Library:", libraryState);
+		console.log("!!! Setting Library:", clone(libraryState));
 		appStore.set(libraryState.key, libraryState);
 	}, [appInitialized, appStore, libraryState]);
 
@@ -54,7 +55,9 @@ function RootComponent() {
 
 		try {
 			let library = await store.get(libraryState.key) as LibraryStateT | undefined;
+			console.log("!!! Fetched Library:", clone(library));
 			if (!library) library = libraryState;
+			console.log("!!! Check Fetched Library:", clone(library));
 			setLibraryState(library);
 		} catch (e) {
 			console.error(e);

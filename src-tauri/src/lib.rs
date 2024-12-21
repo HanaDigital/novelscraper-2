@@ -6,6 +6,7 @@ async fn download_novel(
     source_url: &str,
     novel_url: &str,
     batch_size: usize,
+    batch_delay: usize,
     start_from_index: usize,
 ) -> Result<Vec<source::Chapter>, String> {
     source::download_novel(
@@ -13,6 +14,7 @@ async fn download_novel(
         source_url,
         novel_url,
         batch_size,
+        batch_delay,
         start_from_index,
     )
     .await

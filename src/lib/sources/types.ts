@@ -63,13 +63,13 @@ export class NovelSource {
 		throw new Error(`${this.name}: 'updateNovelMetadata' method not implemented.`);
 	}
 
-	async downloadNovel(novel: NovelT): Promise<ChapterT[]> {
+	async downloadNovel(novel: NovelT, batchSize: number, batchDelay: number, startFromChapterIndex = 0): Promise<ChapterT[]> {
 		throw new Error(`${this.name}: 'downloadNovel' method not implemented.`);
 	}
 
 	static getPropagandaHTML(): string {
 		return `<br />
 <br />
-<p>This novel was scraped using <a href="https://github.com/HanaDigital/NovelScraper">NovelScraper</a>, a free and open-source novel scraping tool.</p>`;
+<p>This novel was scraped using <a href="https://github.com/HanaDigital/NovelScraper">NovelScraper</a>, a free and open-source novel scraping app.</p>`;
 	}
 }

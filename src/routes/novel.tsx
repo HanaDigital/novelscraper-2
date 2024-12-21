@@ -84,7 +84,7 @@ function RouteComponent() {
 			await new Promise((resolve) => setTimeout(resolve, 500));
 			const libNovel = clone(novel);
 			const preDownloadedChapters = await getNovelChapters(novel);
-			const downloadedChapters = await novelSource.downloadNovel(novel, preDownloadedChapters.length);
+			const downloadedChapters = await novelSource.downloadNovel(novel, appState.downloadBatchSize, appState.downloadBatchDelay, preDownloadedChapters.length);
 			console.log("!!! Downloaded Chapters", downloadedChapters);
 			const chapters = preDownloadedChapters.concat(downloadedChapters);
 			await saveNovelChapters(novel, chapters);

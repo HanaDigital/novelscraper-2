@@ -5,13 +5,19 @@ import { SourceIDsT, SOURCES } from "./sources/sources";
 
 export type AppStateT = {
 	key: string;
+	version: number;
 	isSidePanelOpen: boolean;
 	libraryRootPath: string;
+	downloadBatchSize: number;
+	downloadBatchDelay: number;
 }
 export const appStateAtom = atomWithImmer<AppStateT>({
 	key: 'appState',
+	version: 1,
 	isSidePanelOpen: true,
 	libraryRootPath: "",
+	downloadBatchSize: 5,
+	downloadBatchDelay: 0,
 })
 
 export type LibraryStateT = {

@@ -1,9 +1,9 @@
 import { message } from "@tauri-apps/plugin-dialog";
-import { exists, mkdir, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { exists, mkdir, writeFile } from "@tauri-apps/plugin-fs";
 import * as path from '@tauri-apps/api/path';
 import { ChapterT, NovelT } from "../sources/types";
 import { invoke } from "@tauri-apps/api/core";
-import { SourceIDsT, SOURCES } from "../sources/sources";
+import { SOURCES } from "../sources/sources";
 import { load } from "@tauri-apps/plugin-store";
 
 export const createLibraryDir = async (libraryRootPath: string, subDir = "") => {
@@ -44,10 +44,8 @@ export const saveNovelCover = async (novel: NovelT) => {
 		if (!dirExists) await mkdir(novelDir, { recursive: true });
 
 		const cover = new Uint8Array(await invoke<ArrayBuffer>("fetch_image", { url: coverURL }));
-		console.log(cover);
 		const coverPath = await path.join(novelDir, "cover.png");
 		await writeFile(coverPath, cover);
-		console.log(coverPath);
 		return coverPath;
 	} catch (e) {
 		console.error(e);
