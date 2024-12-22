@@ -4,12 +4,13 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Fragment, useEffect, useState } from 'react';
 import { load, Store } from '@tauri-apps/plugin-store';
-import { useAtom } from 'jotai/react';
-import { appStateAtom, AppStateT, libraryStateAtom, LibraryStateT } from '@/lib/store';
+import { useAtom, useSetAtom } from 'jotai/react';
+import { appStateAtom, AppStateT, downloadStatusAtom, libraryStateAtom, LibraryStateT } from '@/lib/store';
 import Loader from '@/components/loader';
 import * as path from '@tauri-apps/api/path';
 import { createLibraryDir } from '@/lib/library/library';
-import clone from "clone";
+import { listen } from "@tauri-apps/api/event";
+import { DownloadData } from "@/lib/sources/types";
 
 export const Route = createRootRoute({
 	component: RootComponent,
@@ -20,10 +21,22 @@ function RootComponent() {
 	const [appStore, setAppStore] = useState<Store>();
 	const [appState, setAppState] = useAtom(appStateAtom);
 	const [libraryState, setLibraryState] = useAtom(libraryStateAtom);
+	const setDownloadStatus = useSetAtom(downloadStatusAtom);
 
 	useEffect(() => {
-		console.log("!!! App initialized");
 		loadStore();
+
+
+		const downloadStatusListenerP = listen<DownloadData>("download-status", (event) => {
+			setDownloadStatus((state) => {
+				const data = event.payload as DownloadData;
+				state[data.novel_id] = data;
+			})
+		});
+
+		return () => {
+			downloadStatusListenerP.then((unsub) => unsub());
+		}
 	}, []);
 
 	useEffect(() => {
@@ -33,7 +46,6 @@ function RootComponent() {
 
 	useEffect(() => {
 		if (!appInitialized || !appStore) return;
-		console.log("!!! Setting Library:", clone(libraryState));
 		appStore.set(libraryState.key, libraryState);
 	}, [appInitialized, appStore, libraryState]);
 
@@ -55,9 +67,7 @@ function RootComponent() {
 
 		try {
 			let library = await store.get(libraryState.key) as LibraryStateT | undefined;
-			console.log("!!! Fetched Library:", clone(library));
 			if (!library) library = libraryState;
-			console.log("!!! Check Fetched Library:", clone(library));
 			setLibraryState(library);
 		} catch (e) {
 			console.error(e);

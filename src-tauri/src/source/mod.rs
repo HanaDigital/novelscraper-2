@@ -1,35 +1,50 @@
 pub mod novelfull;
 
-use std::io::Read;
-
 use isahc::prelude::*;
+use serde::{Deserialize, Serialize};
+use tauri::AppHandle;
 
-#[derive(Clone, Debug, serde::Serialize)]
+#[derive(Clone, Debug, Serialize)]
+pub struct NovelData {
+    pub novel_id: String,
+    pub novel_url: String,
+    pub source_id: String,
+    pub source_url: String,
+    pub batch_size: usize,
+    pub batch_delay: usize,
+    pub start_downloading_from_index: usize,
+}
+
+#[derive(Clone, Debug, Serialize)]
 pub struct Chapter {
     pub title: String,
     pub url: String,
     pub content: Option<String>,
 }
 
-pub async fn download_novel(
-    source_id: &str,
-    source_url: &str,
-    novel_url: &str,
-    batch_size: usize,
-    batch_delay: usize,
-    start_from_index: usize,
+pub async fn download_novel_chapters(
+    app: &AppHandle,
+    novel_data: NovelData,
 ) -> Result<Vec<Chapter>, String> {
-    if source_id == "novelfull" {
-        return novelfull::download_novel(
-            source_url,
-            novel_url,
-            batch_size,
-            batch_delay,
-            start_from_index,
-        )
-        .await;
+    if novel_data.source_id == "novelfull" {
+        return novelfull::download_novel_chapters(app, novel_data).await;
     }
-    Err(format!("Source {} not found", source_id))
+    Err(format!("Source {} not found", novel_data.source_id))
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum DownloadStatus {
+    Downloading,
+    Paused,
+    Completed,
+    Error,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct DownloadData {
+    pub novel_id: String,
+    pub status: DownloadStatus,
+    pub downloaded_chapters: usize,
 }
 
 pub async fn fetch_html(url: &str) -> Result<String, String> {

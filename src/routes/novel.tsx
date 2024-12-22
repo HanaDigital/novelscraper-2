@@ -1,8 +1,8 @@
 import Loader from "@/components/loader";
 import Page from "@/components/page";
 import { SourceIDsT, SOURCES } from "@/lib/sources/sources";
-import { NovelT } from "@/lib/sources/types";
-import { activeNovelAtom, appStateAtom, libraryStateAtom, searchHistoryAtom } from "@/lib/store";
+import { DownloadData, NovelT } from "@/lib/sources/types";
+import { activeNovelAtom, appStateAtom, downloadStatusAtom, libraryStateAtom, searchHistoryAtom } from "@/lib/store";
 import { createFileRoute } from '@tanstack/react-router'
 import { useAtom, useAtomValue, useSetAtom } from "jotai/react";
 import { useEffect, useState } from "react";
@@ -23,12 +23,20 @@ function RouteComponent() {
 	const setLibraryState = useSetAtom(libraryStateAtom);
 	const [novel, setNovel] = useState<NovelT>();
 	const [coverSrc, setCoverSrc] = useState<string>();
+	const [novelDownloadStatus, setNovelDownloadStatus] = useState<DownloadData>();
 	const [isLoading, setIsLoading] = useState(false);
 	const appState = useAtomValue(appStateAtom);
+	const downloadStatus = useAtomValue(downloadStatusAtom);
 
 	useEffect(() => {
 		loadNovelMetadata();
 	}, []);
+
+	useEffect(() => {
+		if (!activeNovel) return;
+		const status = downloadStatus[activeNovel.id];
+		setNovelDownloadStatus(status);
+	}, [downloadStatus]);
 
 	const loadNovelMetadata = async () => {
 		try {
@@ -110,6 +118,7 @@ function RouteComponent() {
 	if (!novel || isLoading) return <Loader />
 	return (
 		<Page>
+			{novelDownloadStatus && <p>Download Status: {novelDownloadStatus.status} @ {novelDownloadStatus.downloaded_chapters}</p>}
 			<Button size="icon" onClick={handleDownload}><Download /></Button>
 			<Button size="icon" onClick={handleAddToLibrary}><BookmarkPlus /></Button>
 			<img src={coverSrc} alt="Novel Cover" />

@@ -1,35 +1,46 @@
-use super::Chapter;
+use super::{Chapter, DownloadData, NovelData};
 use futures::future::join_all;
 use kuchikiki::traits::*;
 use std::time::Duration;
 use std::{cmp::min, thread, vec};
+use tauri::{AppHandle, Emitter};
 
-pub async fn download_novel(
-    source_url: &str,
-    novel_url: &str,
-    batch_size: usize,
-    batch_delay: usize,
-    start_from_index: usize,
+pub async fn download_novel_chapters(
+    app: &AppHandle,
+    novel_data: NovelData,
 ) -> Result<Vec<Chapter>, String> {
-    let total_pages = get_total_pages(&novel_url).await;
+    app.emit(
+        "download-status",
+        DownloadData {
+            novel_id: novel_data.novel_id.clone(),
+            status: super::DownloadStatus::Downloading,
+            downloaded_chapters: novel_data.start_downloading_from_index,
+        },
+    )
+    .unwrap();
+
+    let total_pages = get_total_pages(&novel_data.novel_url).await;
 
     let mut chapters: Vec<super::Chapter> = vec![];
     for page_num in 1..=total_pages {
         // Get all the chapters on the current page
-        let mut page_chapters = get_page_chapter_urls(&source_url, &novel_url, page_num).await;
+        let mut page_chapters =
+            get_page_chapter_urls(&novel_data.source_url, &novel_data.novel_url, page_num).await;
 
         let mut batch_index: usize = 0;
-        while (batch_index * batch_size) < page_chapters.len() {
-            // TODO: REPLACE
-            thread::sleep(Duration::from_secs(batch_delay as u64));
-            let mut batch_start = batch_index * batch_size;
-            let batch_end = min((batch_index + 1) * batch_size, page_chapters.len());
-            if start_from_index >= batch_end {
+        while (batch_index * novel_data.batch_size) < page_chapters.len() {
+            thread::sleep(Duration::from_secs(novel_data.batch_delay as u64));
+            let mut batch_start = batch_index * novel_data.batch_size;
+            let batch_end = min(
+                (batch_index + 1) * novel_data.batch_size,
+                page_chapters.len(),
+            );
+            if novel_data.start_downloading_from_index >= batch_end {
                 batch_index += 1;
                 continue;
             }
-            if (start_from_index > batch_start) {
-                batch_start = start_from_index;
+            if novel_data.start_downloading_from_index > batch_start {
+                batch_start = novel_data.start_downloading_from_index;
             }
 
             let chapters_batch = &mut page_chapters[batch_start..batch_end];
@@ -45,12 +56,19 @@ pub async fn download_novel(
             }
 
             batch_index += 1;
-            // break; //TODO: REMOVE
+
+            app.emit(
+                "download-status",
+                DownloadData {
+                    novel_id: novel_data.novel_id.clone(),
+                    status: super::DownloadStatus::Downloading,
+                    downloaded_chapters: novel_data.start_downloading_from_index + chapters.len(),
+                },
+            )
+            .unwrap();
         }
-        // break; //TODO: REMOVE
     }
 
-    // println!("!!!chapters: {:?}", chapters);
     Ok(chapters)
 }
 
@@ -58,7 +76,7 @@ async fn get_total_pages(novel_url: &str) -> usize {
     let novel_html = super::fetch_html(novel_url).await.unwrap();
     let document = kuchikiki::parse_html().one(novel_html);
 
-    let mut total_pages = 1;
+    let total_pages;
 
     let last_page_node = match document.select("#list-chapter ul.pagination > li.last a") {
         Ok(mut nodes) => nodes.next(),
@@ -98,10 +116,10 @@ async fn get_page_chapter_urls(
     document
         .select("#list-chapter .row ul.list-chapter > li")
         .unwrap()
-        .for_each(|chapterEl| {
-            let chapterLinkEl = chapterEl.as_node().select("a").unwrap().next().unwrap();
-            let title = chapterLinkEl.text_contents().trim().to_string();
-            let url = chapterLinkEl
+        .for_each(|chapter_elem| {
+            let chapter_link_elem = chapter_elem.as_node().select("a").unwrap().next().unwrap();
+            let title = chapter_link_elem.text_contents().trim().to_string();
+            let url = chapter_link_elem
                 .attributes
                 .borrow()
                 .get("href")

@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import { SourceIDsT } from "./sources";
 
 export type ChapterT = {
@@ -40,6 +41,12 @@ export type NovelSourceProps = {
 	logo: string;
 	url: string;
 }
+
+export type DownloadData = {
+	novel_id: string;
+	status: "downloading" | "paused" | "completed" | "error";
+	downloaded_chapters: number;
+}
 export class NovelSource {
 	id: SourceIDsT;
 	name: string;
@@ -65,6 +72,19 @@ export class NovelSource {
 
 	async downloadNovel(novel: NovelT, batchSize: number, batchDelay: number, startFromChapterIndex = 0): Promise<ChapterT[]> {
 		throw new Error(`${this.name}: 'downloadNovel' method not implemented.`);
+	}
+
+	async downloadChapters(novel: NovelT, batchSize: number, batchDelay: number, startFromChapterIndex = 0): Promise<ChapterT[]> {
+		const chapters = await invoke<ChapterT[]>('download_novel_chapters', {
+			novel_id: novel.id,
+			novel_url: novel.url,
+			source_id: this.id,
+			source_url: this.url,
+			batch_size: batchSize,
+			batch_delay: batchDelay,
+			start_downloading_from_index: startFromChapterIndex,
+		});
+		return chapters;
 	}
 
 	static getPropagandaHTML(): string {
