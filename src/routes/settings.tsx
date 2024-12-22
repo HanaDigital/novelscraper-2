@@ -75,40 +75,40 @@ function RouteComponent() {
 
 	return (
 		<Page>
-			<div className="flex flex-col">
-				<TinyP className="mb-2">Library Root Path</TinyP>
+			<div className="flex flex-col gap-2">
+				<TinyP className="">Library Root Path</TinyP>
 				<div className="flex items-center bg-card border rounded pl-2">
 					<P className='flex-1'>{appState.libraryRootPath}</P>
 					<Button onClick={handleSavePath}>Change Path</Button>
 				</div>
-				<TinyP className="text-muted-foreground flex gap-1 items-center">
-					<InfoCircle width={15} />
+				<TinyP className="text-muted-foreground flex gap-1">
+					<InfoCircle className="w-4 h-4" />
 					The <b><i>NovelScraper-Library</i></b> folder will be created in the selected path.
 				</TinyP>
 			</div>
 
-			<div className="flex flex-col">
-				<TinyP className="mb-2">Batch Size</TinyP>
+			<div className="flex flex-col gap-2">
+				<TinyP className="">Batch Size</TinyP>
 				<div className="flex items-center gap-2">
 					<Button size="icon" disabled={appState.downloadBatchSize <= 1} onClick={handleDecreaseBatchSize}><Minus /></Button>
 					<P className='bg-card border rounded px-4 h-full'>{appState.downloadBatchSize}</P>
 					<Button size="icon" disabled={appState.downloadBatchSize >= 5} onClick={handleIncreaseBatchSize}><Plus /></Button>
 				</div>
-				<TinyP className="text-muted-foreground flex gap-1 items-center">
-					<InfoCircle width={15} />
+				<TinyP className="text-muted-foreground flex gap-1">
+					<InfoCircle className="w-4 h-4" />
 					The number of chapters to download in a single batch. Makes downloading faster but may result in a ban.
 				</TinyP>
 			</div>
 
-			<div className="flex flex-col">
-				<TinyP className="mb-2">Batch Delay</TinyP>
+			<div className="flex flex-col gap-2">
+				<TinyP className="">Batch Delay</TinyP>
 				<div className="flex items-center gap-2">
 					<Button size="icon" disabled={appState.downloadBatchDelay <= 0} onClick={handleDecreaseBatchDelay}><Minus /></Button>
 					<P className='bg-card border rounded px-4 h-full'>{appState.downloadBatchDelay}</P>
 					<Button size="icon" disabled={appState.downloadBatchDelay >= 10} onClick={handleIncreaseBatchDelay}><Plus /></Button>
 				</div>
-				<TinyP className="text-muted-foreground flex gap-1 items-center">
-					<InfoCircle width={15} />
+				<TinyP className="text-muted-foreground flex gap-1 justify-start">
+					<InfoCircle className="w-4 h-4" />
 					A delay in seconds between each batch. Makes downloading slower but may help against getting a ban.
 				</TinyP>
 			</div>

@@ -32,7 +32,7 @@ export default function Breadcrumbs() {
 			return (
 				<div className="flex items-center gap-2">
 					<Link href="/sources">
-						<H4 className="text-muted-foreground hover:underline">Store</H4>
+						<H4 className="text-muted-foreground hover:underline">Sources</H4>
 					</Link>
 					<H4 className="text-muted-foreground">/</H4>
 					<H4>{source.name}</H4>
