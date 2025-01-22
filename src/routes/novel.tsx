@@ -8,10 +8,11 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai/react";
 import { useEffect, useState } from "react";
 import clone from "clone";
 import { Button } from "@/components/ui/button";
-import { BookmarkPlus, Download } from "@mynaui/icons-react";
-import { getNovelChapters, saveNovelChapters, saveNovelCover, saveNovelEpub } from "@/lib/library/library";
+import { BookmarkPlus, Delete, Download, Refresh } from "@mynaui/icons-react";
+import { deleteNovelData, getNovelChapters, saveNovelChapters, saveNovelCover, saveNovelEpub } from "@/lib/library/library";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import EpubTemplate from "@/lib/library/epub";
+import { message } from "@tauri-apps/plugin-dialog";
 
 export const Route = createFileRoute('/novel')({
 	component: RouteComponent,
@@ -38,23 +39,12 @@ function RouteComponent() {
 		setNovelDownloadStatus(status);
 	}, [downloadStatus]);
 
-	const loadNovelMetadata = async () => {
+	const loadNovelMetadata = async (forceFetch = false) => {
 		try {
 			if (!activeNovel) return;
+			setNovel(undefined);
 			let _novel = activeNovel;
-			if (!_novel.isMetadataLoaded) {
-				const novelSource = SOURCES[_novel.source];
-				await new Promise((resolve) => setTimeout(resolve, 500));
-				_novel = await novelSource.getNovelMetadata(clone(_novel));
-				_novel.isMetadataLoaded = true;
-				_novel.updatedMetadataAt = new Date().toISOString();
-				if (_novel.totalChapters !== _novel.totalChapters) _novel.updatedChaptersAt = new Date().toISOString();
-				setSearchHistory((state) => {
-					let novels = state[_novel.source as SourceIDsT];
-					let novelIndex = novels.findIndex((n) => n.id === _novel.id);
-					novels[novelIndex] = _novel;
-				});
-			}
+			if (!_novel.isMetadataLoaded || forceFetch) _novel = await fetchMetadata(_novel);
 
 			if (_novel.localCoverPath) {
 				const src = convertFileSrc(_novel.localCoverPath);
@@ -67,6 +57,21 @@ function RouteComponent() {
 		} catch (e) {
 			console.error(e);
 		}
+	}
+
+	const fetchMetadata = async (_novel: NovelT) => {
+		try {
+			const novelSource = SOURCES[_novel.source];
+			await new Promise((resolve) => setTimeout(resolve, 500));
+			_novel = await novelSource.getNovelMetadata(clone(_novel));
+			_novel.isMetadataLoaded = true;
+			_novel.updatedMetadataAt = new Date().toISOString();
+			if (_novel.totalChapters !== _novel.totalChapters) _novel.updatedChaptersAt = new Date().toISOString();
+		} catch (e) {
+			console.error(e);
+			await message(`Couldn't get metadata for ${_novel.title}`, { title: SOURCES[_novel.source].name, kind: 'error' });
+		}
+		return _novel;
 	}
 
 	const handleAddToLibrary = async () => {
@@ -107,20 +112,50 @@ function RouteComponent() {
 		}
 	}
 
-	const updateState = async (novel: NovelT, saveInLibrary = true) => {
-		if (saveInLibrary) setLibraryState((library) => {
-			library.novels[novel.id] = novel;
+	const handleRemoveFromLibrary = async () => {
+		try {
+			if (!novel) return;
+			const libNovel = clone(novel);
+			libNovel.isInLibrary = false;
+			libNovel.addedToLibraryAt = undefined;
+			libNovel.updatedMetadataAt = new Date().toISOString();
+			libNovel.localCoverPath = undefined;
+			libNovel.downloadedChapters = 0;
+			libNovel.isFavorite = false;
+			libNovel.isDownloaded = false;
+			setLibraryState((library) => {
+				delete library.novels[libNovel.id];
+			})
+			updateState(libNovel, false);
+			await deleteNovelData(libNovel);
+		} catch (e) {
+			console.error(e);
+		}
+	}
+
+	const updateState = async (_novel: NovelT, saveInLibrary: boolean) => {
+		if (saveInLibrary || _novel.isInLibrary) setLibraryState((library) => {
+			library.novels[_novel.id] = _novel;
 		});
-		setActiveNovel(novel);
-		setNovel(novel);
+		setSearchHistory((state) => {
+			let novels = state[_novel.source as SourceIDsT];
+			let novelIndex = novels.findIndex((n) => n.id === _novel.id);
+			if (novelIndex < 0) return state;
+			novels[novelIndex] = _novel;
+		});
+		setActiveNovel(_novel);
+		setNovel(_novel);
 	}
 
 	if (!novel || isLoading) return <Loader />
 	return (
 		<Page>
 			{novelDownloadStatus && <p>Download Status: {novelDownloadStatus.status} @ {novelDownloadStatus.downloaded_chapters}</p>}
-			<Button size="icon" onClick={handleDownload}><Download /></Button>
-			<Button size="icon" onClick={handleAddToLibrary}><BookmarkPlus /></Button>
+			{novel.isInLibrary && <Button size="icon" onClick={handleDownload}><Download /></Button>}
+			{!novel.isInLibrary && <Button size="icon" onClick={handleAddToLibrary}><BookmarkPlus /></Button>}
+			{novel.isInLibrary && <Button size="icon" onClick={handleRemoveFromLibrary}><Delete /></Button>}
+			<Button size="icon" onClick={() => loadNovelMetadata(true)}><Refresh /></Button>
+
 			<img src={coverSrc} alt="Novel Cover" />
 			<h1>{novel.title}</h1>
 			<p>{novel.description}</p>

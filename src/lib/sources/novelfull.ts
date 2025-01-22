@@ -55,13 +55,14 @@ export class NovelFull extends NovelSource {
 
 			try {
 				const lastPageUri = new URL(`${novel.url}?page=${totalPages}`);
-				const lastPageRes = await fetch(lastPageUri.toString());
-				const lastPageDocument = cheerio.load(await lastPageRes.text());
+				const lastPageRes = await invoke<string>('fetch_html', { url: lastPageUri.toString() });
+				if (!lastPageRes) throw new Error('Failed to fetch last page!');
+				const lastPageDocument = cheerio.load(lastPageRes);
 				lastPageDocument("ul.list-chapter").each((i, elem) => {
 					totalChapters += $(elem).find("li").length;
 				});
 			} catch (e) {
-				console.error(e);
+				console.error(`Failed to get total chapters for ${novel.title}!`, e);
 			}
 		} else {
 			totalChapters = chaptersPerPage;

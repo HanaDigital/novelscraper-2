@@ -29,4 +29,5 @@ tauri-plugin-dialog = "2"
 isahc = "1.7.2"
 kuchikiki = "0.8.2"
 futures = "0.3.31"
+regex = "1.11.1"
 
