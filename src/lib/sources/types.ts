@@ -42,11 +42,12 @@ export type NovelSourceProps = {
 	url: string;
 }
 
-export type DownloadData = {
+export type DownloadDataT = {
 	novel_id: string;
-	status: "downloading" | "paused" | "completed" | "error";
+	status: "downloading" | "paused" | "completed" | "cancelled" | "error";
 	downloaded_chapters: number;
 }
+
 export class NovelSource {
 	id: SourceIDsT;
 	name: string;

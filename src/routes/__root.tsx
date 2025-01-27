@@ -10,7 +10,7 @@ import Loader from '@/components/loader';
 import * as path from '@tauri-apps/api/path';
 import { createLibraryDir } from '@/lib/library/library';
 import { listen } from "@tauri-apps/api/event";
-import { DownloadData } from "@/lib/sources/types";
+import { DownloadDataT } from "@/lib/sources/types";
 
 export const Route = createRootRoute({
 	component: RootComponent,
@@ -27,10 +27,14 @@ function RootComponent() {
 		loadStore();
 
 
-		const downloadStatusListenerP = listen<DownloadData>("download-status", (event) => {
+		const downloadStatusListenerP = listen<DownloadDataT>("download-status", (event) => {
 			setDownloadStatus((state) => {
-				const data = event.payload as DownloadData;
-				state[data.novel_id] = data;
+				const data = event.payload;
+				if (data.status === "downloading") {
+					state[data.novel_id].downloaded_chapters = data.downloaded_chapters;
+				} else {
+					state[data.novel_id] = data;
+				}
 			})
 		});
 

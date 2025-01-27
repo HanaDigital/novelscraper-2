@@ -10,16 +10,6 @@ pub async fn download_novel_chapters(
     app: &AppHandle,
     novel_data: NovelData,
 ) -> Result<Vec<Chapter>, String> {
-    app.emit(
-        "download-status",
-        DownloadData {
-            novel_id: novel_data.novel_id.clone(),
-            status: super::DownloadStatus::Downloading,
-            downloaded_chapters: novel_data.start_downloading_from_index,
-        },
-    )
-    .unwrap();
-
     let total_pages = get_total_pages(&novel_data.novel_url).await;
 
     let mut chapters: Vec<super::Chapter> = vec![];

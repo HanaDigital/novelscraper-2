@@ -1,6 +1,6 @@
 import { atomWithImmer } from 'jotai-immer'
 import { atom } from 'jotai/vanilla'
-import { DownloadData, NovelT } from "./sources/types";
+import { DownloadDataT, NovelT } from "./sources/types";
 import { SourceIDsT, SOURCES } from "./sources/sources";
 
 export type AppStateT = {
@@ -38,4 +38,4 @@ Object.keys(SOURCES).forEach((s) => {
 export const searchHistoryAtom = atomWithImmer<searchHistoryT>(searchHistory);
 
 export const activeNovelAtom = atom<NovelT | null>(null);
-export const downloadStatusAtom = atomWithImmer<{ [key: string]: DownloadData }>({});
+export const downloadStatusAtom = atomWithImmer<{ [key: string]: DownloadDataT }>({});

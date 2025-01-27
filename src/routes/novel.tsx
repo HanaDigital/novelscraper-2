@@ -1,18 +1,20 @@
 import Loader from "@/components/loader";
 import Page from "@/components/page";
 import { SourceIDsT, SOURCES } from "@/lib/sources/sources";
-import { DownloadData, NovelT } from "@/lib/sources/types";
+import { DownloadDataT, NovelT } from "@/lib/sources/types";
 import { activeNovelAtom, appStateAtom, downloadStatusAtom, libraryStateAtom, searchHistoryAtom } from "@/lib/store";
 import { createFileRoute } from '@tanstack/react-router'
 import { useAtom, useAtomValue, useSetAtom } from "jotai/react";
 import { useEffect, useState } from "react";
 import clone from "clone";
 import { Button } from "@/components/ui/button";
-import { BookmarkPlus, Delete, Download, Refresh } from "@mynaui/icons-react";
+import { BookmarkMinus, BookmarkMinusSolid, BookmarkPlus, BookmarkPlusSolid, Delete, Download, DownloadSolid, Refresh, RefreshSolid } from "@mynaui/icons-react";
 import { deleteNovelData, getNovelChapters, saveNovelChapters, saveNovelCover, saveNovelEpub } from "@/lib/library/library";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import EpubTemplate from "@/lib/library/epub";
 import { message } from "@tauri-apps/plugin-dialog";
+import { TooltipUI } from "@/components/tooltip";
+import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute('/novel')({
 	component: RouteComponent,
@@ -24,10 +26,10 @@ function RouteComponent() {
 	const setLibraryState = useSetAtom(libraryStateAtom);
 	const [novel, setNovel] = useState<NovelT>();
 	const [coverSrc, setCoverSrc] = useState<string>();
-	const [novelDownloadStatus, setNovelDownloadStatus] = useState<DownloadData>();
+	const [novelDownloadStatus, setNovelDownloadStatus] = useState<DownloadDataT>();
 	const [isLoading, setIsLoading] = useState(false);
 	const appState = useAtomValue(appStateAtom);
-	const downloadStatus = useAtomValue(downloadStatusAtom);
+	const [downloadStatus, setDownloadStatus] = useAtom(downloadStatusAtom);
 
 	useEffect(() => {
 		loadNovelMetadata();
@@ -75,8 +77,8 @@ function RouteComponent() {
 	}
 
 	const handleAddToLibrary = async () => {
+		if (!novel) return;
 		try {
-			if (!novel) return;
 			setIsLoading(true);
 			const libNovel = clone(novel);
 			libNovel.isInLibrary = true;
@@ -86,19 +88,26 @@ function RouteComponent() {
 			updateState(libNovel, true);
 		} catch (e) {
 			console.error(e);
+			await message(`Couldn't add ${novel.title} to library`, { title: SOURCES[novel.source].name, kind: 'error' });
 		}
 		setIsLoading(false);
 	}
 
 	const handleDownload = async () => {
+		if (!novel) return;
 		try {
-			if (!novel) return;
 			const novelSource = SOURCES[novel.source];
 			await new Promise((resolve) => setTimeout(resolve, 500));
 			const libNovel = clone(novel);
 			const preDownloadedChapters = await getNovelChapters(novel);
+			setDownloadStatus(status => {
+				status[novel.id] = {
+					novel_id: novel.id,
+					status: "downloading",
+					downloaded_chapters: preDownloadedChapters.length
+				};
+			})
 			const downloadedChapters = await novelSource.downloadNovel(novel, appState.downloadBatchSize, appState.downloadBatchDelay, preDownloadedChapters.length);
-			console.log("!!! Downloaded Chapters", downloadedChapters);
 			const chapters = preDownloadedChapters.concat(downloadedChapters);
 			await saveNovelChapters(novel, chapters);
 			const epub = await EpubTemplate.generateEpub(novel, chapters);
@@ -109,6 +118,11 @@ function RouteComponent() {
 			updateState(libNovel, true);
 		} catch (e) {
 			console.error(e);
+			setDownloadStatus(status => {
+				status[novel.id]["status"] = "error";
+			})
+			await message(`Couldn't download ${novel.title}`, { title: SOURCES[novel.source].name, kind: 'error' });
+
 		}
 	}
 
@@ -150,11 +164,27 @@ function RouteComponent() {
 	if (!novel || isLoading) return <Loader />
 	return (
 		<Page>
-			{novelDownloadStatus && <p>Download Status: {novelDownloadStatus.status} @ {novelDownloadStatus.downloaded_chapters}</p>}
-			{novel.isInLibrary && <Button size="icon" onClick={handleDownload}><Download /></Button>}
-			{!novel.isInLibrary && <Button size="icon" onClick={handleAddToLibrary}><BookmarkPlus /></Button>}
-			{novel.isInLibrary && <Button size="icon" onClick={handleRemoveFromLibrary}><Delete /></Button>}
-			<Button size="icon" onClick={() => loadNovelMetadata(true)}><Refresh /></Button>
+			<div className="flex justify-between items-center">
+				<div className="flex gap-2">
+					{novel.isInLibrary && <TooltipUI content="Download" side="bottom" sideOffset={8}>
+						<Button className="!p-0" size="icon" onClick={handleDownload}><DownloadSolid /></Button>
+					</TooltipUI>}
+					{!novel.isInLibrary && <TooltipUI content="Bookmark" side="bottom" sideOffset={8}>
+						<Button size="icon" onClick={handleAddToLibrary}><BookmarkPlusSolid /></Button>
+					</TooltipUI>}
+					<TooltipUI content="Reload" side="bottom" sideOffset={8}>
+						<Button size="icon" variant="secondary" onClick={() => loadNovelMetadata(true)}><RefreshSolid /></Button>
+					</TooltipUI>
+					{novel.isInLibrary && <TooltipUI content="Delete" side="bottom" sideOffset={8}>
+						<Button size="icon" variant="destructive" onClick={handleRemoveFromLibrary}><BookmarkMinusSolid /></Button>
+					</TooltipUI>}
+				</div>
+				{novelDownloadStatus &&
+					<p>Download Status: {novelDownloadStatus.status} @ {novelDownloadStatus.downloaded_chapters}</p>
+				}
+
+				<Progress value={50} max={100} content="Downloading" className="max-w-60" />
+			</div>
 
 			<img src={coverSrc} alt="Novel Cover" />
 			<h1>{novel.title}</h1>
