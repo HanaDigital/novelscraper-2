@@ -15,7 +15,7 @@ pub struct NovelData {
     pub start_downloading_from_index: usize,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Chapter {
     pub title: String,
     pub url: String,
@@ -45,7 +45,8 @@ pub enum DownloadStatus {
 pub struct DownloadData {
     pub novel_id: String,
     pub status: DownloadStatus,
-    pub downloaded_chapters: usize,
+    pub downloaded_chapters_count: usize,
+    pub downloaded_chapters: Option<Vec<Chapter>>,
 }
 
 pub async fn fetch_html(url: &str) -> Result<String, String> {

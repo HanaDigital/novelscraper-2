@@ -44,8 +44,9 @@ export type NovelSourceProps = {
 
 export type DownloadDataT = {
 	novel_id: string;
-	status: "downloading" | "paused" | "completed" | "cancelled" | "error";
-	downloaded_chapters: number;
+	status: "Downloading" | "Paused" | "Completed" | "Cancelled" | "Error";
+	downloaded_chapters_count: number;
+	downloaded_chapters?: ChapterT[];
 }
 
 export class NovelSource {

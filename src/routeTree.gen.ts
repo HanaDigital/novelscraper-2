@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as SettingsImport } from './routes/settings'
+import { Route as NovelImport } from './routes/novel'
 import { Route as LibraryImport } from './routes/library'
 import { Route as IndexImport } from './routes/index'
 import { Route as SourcesIndexImport } from './routes/sources/index'
@@ -22,6 +23,12 @@ import { Route as SourcesSourceIdImport } from './routes/sources/$sourceId'
 const SettingsRoute = SettingsImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const NovelRoute = NovelImport.update({
+  id: '/novel',
+  path: '/novel',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -67,6 +74,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibraryImport
       parentRoute: typeof rootRoute
     }
+    '/novel': {
+      id: '/novel'
+      path: '/novel'
+      fullPath: '/novel'
+      preLoaderRoute: typeof NovelImport
+      parentRoute: typeof rootRoute
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -96,6 +110,7 @@ declare module '@tanstack/react-router' {
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
+  '/novel': typeof NovelRoute
   '/settings': typeof SettingsRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources': typeof SourcesIndexRoute
@@ -104,6 +119,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
+  '/novel': typeof NovelRoute
   '/settings': typeof SettingsRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources': typeof SourcesIndexRoute
@@ -113,6 +129,7 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
+  '/novel': typeof NovelRoute
   '/settings': typeof SettingsRoute
   '/sources/$sourceId': typeof SourcesSourceIdRoute
   '/sources/': typeof SourcesIndexRoute
@@ -120,13 +137,26 @@ export interface FileRoutesById {
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/library' | '/settings' | '/sources/$sourceId' | '/sources'
+  fullPaths:
+    | '/'
+    | '/library'
+    | '/novel'
+    | '/settings'
+    | '/sources/$sourceId'
+    | '/sources'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/library' | '/settings' | '/sources/$sourceId' | '/sources'
+  to:
+    | '/'
+    | '/library'
+    | '/novel'
+    | '/settings'
+    | '/sources/$sourceId'
+    | '/sources'
   id:
     | '__root__'
     | '/'
     | '/library'
+    | '/novel'
     | '/settings'
     | '/sources/$sourceId'
     | '/sources/'
@@ -136,6 +166,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LibraryRoute: typeof LibraryRoute
+  NovelRoute: typeof NovelRoute
   SettingsRoute: typeof SettingsRoute
   SourcesSourceIdRoute: typeof SourcesSourceIdRoute
   SourcesIndexRoute: typeof SourcesIndexRoute
@@ -144,6 +175,7 @@ export interface RootRouteChildren {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LibraryRoute: LibraryRoute,
+  NovelRoute: NovelRoute,
   SettingsRoute: SettingsRoute,
   SourcesSourceIdRoute: SourcesSourceIdRoute,
   SourcesIndexRoute: SourcesIndexRoute,
@@ -161,6 +193,7 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/library",
+        "/novel",
         "/settings",
         "/sources/$sourceId",
         "/sources/"
@@ -171,6 +204,9 @@ export const routeTree = rootRoute
     },
     "/library": {
       "filePath": "library.tsx"
+    },
+    "/novel": {
+      "filePath": "novel.tsx"
     },
     "/settings": {
       "filePath": "settings.tsx"

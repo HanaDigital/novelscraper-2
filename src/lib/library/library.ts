@@ -53,7 +53,7 @@ export const saveNovelCover = async (novel: NovelT) => {
 export const saveNovelChapters = async (novel: NovelT, chapters: ChapterT[]) => {
 	try {
 		const novelStore = await getNovelStore(novel);
-		novelStore.set("chapters", chapters);
+		await novelStore.set("chapters", chapters);
 		await novelStore.save();
 		await novelStore.close();
 	} catch (e) {

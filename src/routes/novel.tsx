@@ -8,7 +8,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai/react";
 import { useEffect, useState } from "react";
 import clone from "clone";
 import { Button } from "@/components/ui/button";
-import { BookmarkMinus, BookmarkMinusSolid, BookmarkPlus, BookmarkPlusSolid, Delete, Download, DownloadSolid, Refresh, RefreshSolid } from "@mynaui/icons-react";
+import { BookmarkMinusSolid, BookmarkPlusSolid, DownloadSolid, RefreshSolid } from "@mynaui/icons-react";
 import { deleteNovelData, getNovelChapters, saveNovelChapters, saveNovelCover, saveNovelEpub } from "@/lib/library/library";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import EpubTemplate from "@/lib/library/epub";
@@ -36,10 +36,11 @@ function RouteComponent() {
 	}, []);
 
 	useEffect(() => {
+		console.log("!!!NovelStatus:", downloadStatus);
 		if (!activeNovel) return;
 		const status = downloadStatus[activeNovel.id];
 		setNovelDownloadStatus(status);
-	}, [downloadStatus]);
+	}, [downloadStatus[activeNovel?.id ?? ""]]);
 
 	const loadNovelMetadata = async (forceFetch = false) => {
 		try {
@@ -103,8 +104,9 @@ function RouteComponent() {
 			setDownloadStatus(status => {
 				status[novel.id] = {
 					novel_id: novel.id,
-					status: "downloading",
-					downloaded_chapters: preDownloadedChapters.length
+					status: "Downloading",
+					downloaded_chapters_count: preDownloadedChapters.length,
+					downloaded_chapters: preDownloadedChapters
 				};
 			})
 			const downloadedChapters = await novelSource.downloadNovel(novel, appState.downloadBatchSize, appState.downloadBatchDelay, preDownloadedChapters.length);
@@ -119,10 +121,10 @@ function RouteComponent() {
 		} catch (e) {
 			console.error(e);
 			setDownloadStatus(status => {
-				status[novel.id]["status"] = "error";
+				status[novel.id]["status"] = "Error";
 			})
 			await message(`Couldn't download ${novel.title}`, { title: SOURCES[novel.source].name, kind: 'error' });
-
+			await saveNovelChapters(novel, downloadStatus[novel.id].downloaded_chapters ?? []);
 		}
 	}
 
@@ -180,10 +182,10 @@ function RouteComponent() {
 					</TooltipUI>}
 				</div>
 				{novelDownloadStatus &&
-					<p>Download Status: {novelDownloadStatus.status} @ {novelDownloadStatus.downloaded_chapters}</p>
+					<p>Download Status: {novelDownloadStatus.status} @ {novelDownloadStatus.downloaded_chapters_count}</p>
 				}
 
-				<Progress value={50} max={100} content="Downloading" className="max-w-60" />
+				<Progress value={((novelDownloadStatus?.downloaded_chapters_count || 0) / (novel.totalChapters || 1)) * 100} content="Downloading" className="max-w-60" />
 			</div>
 
 			<img src={coverSrc} alt="Novel Cover" />

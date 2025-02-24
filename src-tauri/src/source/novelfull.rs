@@ -53,7 +53,9 @@ pub async fn download_novel_chapters(
                 DownloadData {
                     novel_id: novel_data.novel_id.clone(),
                     status: super::DownloadStatus::Downloading,
-                    downloaded_chapters: novel_data.start_downloading_from_index + chapters.len(),
+                    downloaded_chapters_count: novel_data.start_downloading_from_index
+                        + chapters.len(),
+                    downloaded_chapters: Some(chapters_batch.to_vec()),
                 },
             )
             .unwrap();

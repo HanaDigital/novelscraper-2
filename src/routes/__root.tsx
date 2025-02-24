@@ -8,7 +8,7 @@ import { useAtom, useSetAtom } from 'jotai/react';
 import { appStateAtom, AppStateT, downloadStatusAtom, libraryStateAtom, LibraryStateT } from '@/lib/store';
 import Loader from '@/components/loader';
 import * as path from '@tauri-apps/api/path';
-import { createLibraryDir } from '@/lib/library/library';
+import { createLibraryDir, saveNovelChapters } from '@/lib/library/library';
 import { listen } from "@tauri-apps/api/event";
 import { DownloadDataT } from "@/lib/sources/types";
 
@@ -25,22 +25,6 @@ function RootComponent() {
 
 	useEffect(() => {
 		loadStore();
-
-
-		const downloadStatusListenerP = listen<DownloadDataT>("download-status", (event) => {
-			setDownloadStatus((state) => {
-				const data = event.payload;
-				if (data.status === "downloading") {
-					state[data.novel_id].downloaded_chapters = data.downloaded_chapters;
-				} else {
-					state[data.novel_id] = data;
-				}
-			})
-		});
-
-		return () => {
-			downloadStatusListenerP.then((unsub) => unsub());
-		}
 	}, []);
 
 	useEffect(() => {
@@ -51,6 +35,21 @@ function RootComponent() {
 	useEffect(() => {
 		if (!appInitialized || !appStore) return;
 		appStore.set(libraryState.key, libraryState);
+
+		const downloadStatusListenerP = listen<DownloadDataT>("download-status", (event) => {
+			const data = event.payload;
+			setDownloadStatus((state) => {
+				state[data.novel_id].status = data.status;
+				if (data.status === "Downloading") {
+					state[data.novel_id].downloaded_chapters_count = data.downloaded_chapters_count;
+					state[data.novel_id].downloaded_chapters?.concat(data.downloaded_chapters ?? []);
+				}
+			});
+		});
+
+		return () => {
+			downloadStatusListenerP.then((unsub) => unsub());
+		}
 	}, [appInitialized, appStore, libraryState]);
 
 	const loadStore = async () => {

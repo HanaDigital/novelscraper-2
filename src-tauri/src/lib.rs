@@ -33,7 +33,8 @@ async fn download_novel_chapters(
                 source::DownloadData {
                     novel_id: novel_id.to_string(),
                     status: source::DownloadStatus::Completed,
-                    downloaded_chapters: chapters.len(),
+                    downloaded_chapters_count: chapters.len(),
+                    downloaded_chapters: Some(chapters.clone()),
                 },
             )
             .unwrap();
@@ -45,7 +46,8 @@ async fn download_novel_chapters(
                 source::DownloadData {
                     novel_id: novel_id.to_string(),
                     status: source::DownloadStatus::Error,
-                    downloaded_chapters: 0,
+                    downloaded_chapters_count: 0,
+                    downloaded_chapters: None,
                 },
             )
             .unwrap();

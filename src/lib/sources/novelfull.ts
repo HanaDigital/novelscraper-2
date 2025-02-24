@@ -120,34 +120,4 @@ export class NovelFull extends NovelSource {
 		});
 		return novels;
 	}
-
-	private async getChapterContent(chapter: ChapterT): Promise<ChapterT> {
-		const chapterContent = await invoke<string>('fetch_html', { url: chapter.url });
-		if (!chapterContent) throw new Error('Failed to fetch chapter content');
-		const $ = cheerio.load(chapterContent);
-
-		const contentEl = $("#chapter-content");
-		contentEl.find("script").remove();
-		contentEl.find("iframe").remove();
-
-		let content = contentEl.html();
-		if (!content) throw new Error("Chapter content not found");
-		content = content
-			?.replace(/class=".*?"/g, "")
-			.replace(/id=".*?"/g, "")
-			.replace(/style=".*?"/g, "")
-			.replace(/data-.*?=".*?"/g, "")
-			.replace(/<!--.*?-->/g, "")
-			.replace(
-				/<div align="left"[\s\S]*?If you find any errors \( Ads popup, ads redirect, broken links, non-standard content, etc.. \)[\s\S]*?<\/div>/g,
-				""
-			);
-
-		const titleHTML = `<h1>${chapter.title}</h1>`;
-		const propagandaHTML = NovelSource.getPropagandaHTML();
-
-		content = `${titleHTML}\n${content}\n${propagandaHTML}`;
-		chapter.content = content;
-		return chapter;
-	}
 }
