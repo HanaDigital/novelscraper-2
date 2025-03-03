@@ -3,7 +3,7 @@ import NovgoLogo from '@/assets/store/novgo-logo.png';
 import LightNovelPubLogo from '@/assets/store/lightnovelpub-logo.png';
 import { NovelFull } from './novelfull';
 import { LightNovelPub } from "./lightnovelpub";
-import { Novgo } from "./novogo";
+import { Novgo } from "./novgo";
 
 export const SOURCES = {
 	"novelfull": new NovelFull({
@@ -18,7 +18,7 @@ export const SOURCES = {
 		name: 'Novgo',
 		tags: ['Chinese, Korean'],
 		logo: NovgoLogo,
-		url: 'https://novogo.com'
+		url: 'https://novgo.co'
 	}),
 	"lightnovelpub": new LightNovelPub({
 		id: 'lightnovelpub',

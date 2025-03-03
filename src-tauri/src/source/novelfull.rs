@@ -37,7 +37,7 @@ pub async fn download_novel_chapters(
             let chapters_batch = &mut page_chapters[batch_start..batch_end];
             let chapter_html_futures = chapters_batch
                 .iter()
-                .map(|chapter| super::fetch_html(&chapter.url));
+                .map(|chapter| super::fetch_html(&chapter.url, None));
 
             let chapter_html_vec = join_all(chapter_html_futures).await;
             for i in 0..chapter_html_vec.len() {
@@ -66,7 +66,7 @@ pub async fn download_novel_chapters(
 }
 
 async fn get_total_pages(novel_url: &str) -> usize {
-    let novel_html = super::fetch_html(novel_url).await.unwrap();
+    let novel_html = super::fetch_html(novel_url, None).await.unwrap();
     let document = kuchikiki::parse_html().one(novel_html);
 
     let total_pages;
@@ -100,7 +100,7 @@ async fn get_page_chapter_urls(
     novel_url: &str,
     page: usize,
 ) -> Vec<super::Chapter> {
-    let page_html = super::fetch_html(&format!("{}?page={}", novel_url, page))
+    let page_html = super::fetch_html(&format!("{}?page={}", novel_url, page), None)
         .await
         .unwrap();
     let document = kuchikiki::parse_html().one(page_html);

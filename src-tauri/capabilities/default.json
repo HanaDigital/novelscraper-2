@@ -31,6 +31,23 @@
 				}
 			]
 		},
-		"dialog:default"
+		"dialog:default",
+		"shell:default",
+		{
+			"identifier": "shell:allow-execute",
+			"allow": [
+				{
+					"name": "exec-sh",
+					"cmd": "sh",
+					"args": [
+						"-c",
+						{
+							"validator": "\\S+"
+						}
+					],
+					"sidecar": false
+				}
+			]
+		}
 	]
 }

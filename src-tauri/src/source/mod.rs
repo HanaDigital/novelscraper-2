@@ -1,6 +1,8 @@
 pub mod novelfull;
 
-use isahc::prelude::*;
+use std::{collections::HashMap, time::Duration};
+
+use isahc::{prelude::*, Request};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
@@ -49,8 +51,18 @@ pub struct DownloadData {
     pub downloaded_chapters: Option<Vec<Chapter>>,
 }
 
-pub async fn fetch_html(url: &str) -> Result<String, String> {
-    let res_result = isahc::get(url);
+pub async fn fetch_html(
+    url: &str,
+    headers: Option<HashMap<String, String>>,
+) -> Result<String, String> {
+    let mut req_builder = Request::get(url);
+    if headers.is_some() {
+        for (key, value) in headers.unwrap() {
+            req_builder = req_builder.header(key, value);
+        }
+    }
+
+    let res_result = req_builder.body(()).unwrap().send();
     let mut res = match res_result {
         Ok(res) => res,
         Err(e) => {

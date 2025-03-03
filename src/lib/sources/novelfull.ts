@@ -14,7 +14,6 @@ export class NovelFull extends NovelSource {
 		const encodedQuery = encodeURIComponent(query);
 		const url = `${this.url}/search?keyword=${encodedQuery}`;
 		const response = await invoke<string>('fetch_html', { url });
-		// const response = novelFullSearchHTML;
 		if (!response) throw new Error('Failed to search novels');
 		return this.getNovelsFromSearchPage(response);
 	}
