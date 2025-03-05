@@ -78,8 +78,18 @@ pub async fn fetch_html(
     }
 }
 
-pub async fn fetch_image(url: &str) -> Result<Vec<u8>, String> {
-    let res_result = isahc::get(url);
+pub async fn fetch_image(
+    url: &str,
+    headers: Option<HashMap<String, String>>,
+) -> Result<Vec<u8>, String> {
+    let mut req_builder = Request::get(url);
+    if headers.is_some() {
+        for (key, value) in headers.unwrap() {
+            req_builder = req_builder.header(key, value);
+        }
+    }
+
+    let res_result = req_builder.body(()).unwrap().send();
     let mut res = match res_result {
         Ok(res) => res,
         Err(e) => {

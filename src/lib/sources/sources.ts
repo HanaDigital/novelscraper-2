@@ -1,32 +1,25 @@
-import NovelFullLogo from '@/assets/store/novelfull-logo.png';
-import NovgoLogo from '@/assets/store/novgo-logo.png';
-import LightNovelPubLogo from '@/assets/store/lightnovelpub-logo.png';
+import NovelFullLogo from '@/assets/store/novelfull-logo.jpg';
+import NovelBinLogo from '@/assets/store/novelbin-logo.jpg';
 import { NovelFull } from './novelfull';
-import { LightNovelPub } from "./lightnovelpub";
-import { Novgo } from "./novgo";
+import { NovelBin } from "./novelbin";
 
 export const SOURCES = {
+	"novelbin": new NovelBin({
+		id: 'novelbin',
+		name: 'NovelBin',
+		tags: ['Recommended'],
+		logo: NovelBinLogo,
+		url: 'https://novelbin.me',
+		cloudflareProtected: false,
+	}),
 	"novelfull": new NovelFull({
 		id: 'novelfull',
 		name: 'NovelFull',
-		tags: ['Recommended'],
+		tags: ['Chinese'],
 		logo: NovelFullLogo,
-		url: 'https://novelfull.com'
+		url: 'https://novelfull.com',
+		cloudflareProtected: false,
 	}),
-	"novgo": new Novgo({
-		id: 'novgo',
-		name: 'Novgo',
-		tags: ['Chinese, Korean'],
-		logo: NovgoLogo,
-		url: 'https://novgo.co'
-	}),
-	"lightnovelpub": new LightNovelPub({
-		id: 'lightnovelpub',
-		name: 'LightNovelPub',
-		tags: ['Japanese'],
-		logo: LightNovelPubLogo,
-		url: 'https://www.lightnovelpub.com'
-	})
 } as const;
 
 export type SourceIDsT = keyof typeof SOURCES;

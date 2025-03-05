@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { SmallP, TinyP } from "./typography";
 import { ReactNode } from "react";
+import MissingImageBanner from "@/assets/ui/missing-image-banner.jpg";
 
 type CardUIProps = {
 	href: string;
@@ -19,11 +20,9 @@ export function CardUI({ href, imageURL, title, subTitle, badge, onClick = () =>
 		>
 			{badge && badge}
 			<div className="rounded-lg overflow-hidden w-full aspect-auto flex-1 grid place-items-center bg-background border">
-				<img
-					className="group-hover:scale-[1.05] transition-transform w-full"
-					src={imageURL}
-					alt={`${title}`}
-				/>
+				<object className="group-hover:scale-[1.05] transition-transform w-full" data={imageURL} type="image/jpg">
+					<img src={MissingImageBanner} alt={`${title}`} />
+				</object>
 			</div>
 			<div className="flex flex-col gap-1">
 				<SmallP className="text-ellipsis text-nowrap overflow-hidden">{title}</SmallP>

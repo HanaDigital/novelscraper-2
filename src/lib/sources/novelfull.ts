@@ -1,25 +1,53 @@
 import * as cheerio from 'cheerio';
 import { ChapterT, NovelSource, NovelSourceProps, NovelT } from "./types";
-import { invoke } from "@tauri-apps/api/core";
 import { hashString } from "../utils";
-import { testChapters } from "./test_chapters";
 
 export class NovelFull extends NovelSource {
 
-	constructor({ id, name, tags, logo, url }: NovelSourceProps) {
-		super({ id, name, tags, logo, url });
+	constructor({ id, name, tags, logo, url, cloudflareProtected }: NovelSourceProps) {
+		super({ id, name, tags, logo, url, cloudflareProtected });
 	}
 
 	async searchNovels(query: string): Promise<NovelT[]> {
 		const encodedQuery = encodeURIComponent(query);
 		const url = `${this.url}/search?keyword=${encodedQuery}`;
-		const response = await invoke<string>('fetch_html', { url });
+		const response = await this.fetchHTML(url);
 		if (!response) throw new Error('Failed to search novels');
-		return this.getNovelsFromSearchPage(response);
+
+		const $ = cheerio.load(response);
+		const novels: NovelT[] = [];
+		$("#list-page .col-truyen-main .row").each((i, elem) => {
+			const titleElem = $(elem).find("h3.truyen-title a")
+			const title = titleElem.text().trim();
+			let url = titleElem.attr("href") ?? "";
+			if (url) url = `${this.url}${url}`;
+
+			const author = $(elem).find(".author").text().trim() ?? "Unknown";
+			let thumbnailURL = $(elem).find("img").attr("src");
+			if (thumbnailURL) thumbnailURL = `${this.url}${thumbnailURL}`;
+
+			const novel: NovelT = {
+				id: hashString(url),
+				source: this.id,
+				url,
+				title,
+				authors: [author],
+				genres: [],
+				alternativeTitles: [],
+				thumbnailURL,
+				downloadedChapters: 0,
+				isDownloaded: false,
+				isInLibrary: false,
+				isFavorite: false,
+				isMetadataLoaded: false
+			};
+			novels.push(novel);
+		});
+		return novels;
 	}
 
 	async getNovelMetadata(novel: NovelT): Promise<NovelT> {
-		const response = await invoke<string>('fetch_html', { url: novel.url });
+		const response = await this.fetchHTML(novel.url);
 		if (!response) throw new Error('Failed to fetch novel');
 		const $ = cheerio.load(response);
 
@@ -54,7 +82,7 @@ export class NovelFull extends NovelSource {
 
 			try {
 				const lastPageUri = new URL(`${novel.url}?page=${totalPages}`);
-				const lastPageRes = await invoke<string>('fetch_html', { url: lastPageUri.toString() });
+				const lastPageRes = await this.fetchHTML(lastPageUri.toString());
 				if (!lastPageRes) throw new Error('Failed to fetch last page!');
 				const lastPageDocument = cheerio.load(lastPageRes);
 				lastPageDocument("ul.list-chapter").each((i, elem) => {
@@ -80,43 +108,5 @@ export class NovelFull extends NovelSource {
 		novel.status = status ?? novel.status ?? "Unknown";
 
 		return novel;
-	}
-
-	async downloadNovel(novel: NovelT, batchSize: number, batchDelay: number, startFromChapterIndex = 0): Promise<ChapterT[]> {
-		const chapters = await this.downloadChapters(novel, batchSize, batchDelay, startFromChapterIndex);
-		return chapters;
-	}
-
-	private async getNovelsFromSearchPage(html: string): Promise<NovelT[]> {
-		const $ = cheerio.load(html);
-		const novels: NovelT[] = [];
-		$("#list-page .col-truyen-main .row").each((i, elem) => {
-			const titleElem = $(elem).find("h3.truyen-title a")
-			const title = titleElem.text().trim();
-			let url = titleElem.attr("href") ?? "";
-			if (url) url = `${this.url}${url}`;
-
-			const author = $(elem).find(".author").text().trim() ?? "Unknown";
-			let thumbnailURL = $(elem).find("img").attr("src");
-			if (thumbnailURL) thumbnailURL = `${this.url}${thumbnailURL}`;
-
-			const novel: NovelT = {
-				id: hashString(url),
-				source: this.id,
-				url,
-				title,
-				authors: [author],
-				genres: [],
-				alternativeTitles: [],
-				thumbnailURL,
-				downloadedChapters: 0,
-				isDownloaded: false,
-				isInLibrary: false,
-				isFavorite: false,
-				isMetadataLoaded: false
-			};
-			novels.push(novel);
-		});
-		return novels;
 	}
 }

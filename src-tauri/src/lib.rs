@@ -66,8 +66,11 @@ async fn fetch_html(url: &str, headers: Option<HashMap<String, String>>) -> Resu
 }
 
 #[tauri::command]
-async fn fetch_image(url: &str) -> Result<Vec<u8>, String> {
-    source::fetch_image(url).await
+async fn fetch_image(
+    url: &str,
+    headers: Option<HashMap<String, String>>,
+) -> Result<Vec<u8>, String> {
+    source::fetch_image(url, headers).await
 }
 
 #[tauri::command]

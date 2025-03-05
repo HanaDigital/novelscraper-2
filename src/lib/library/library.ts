@@ -2,7 +2,6 @@ import { message } from "@tauri-apps/plugin-dialog";
 import { exists, mkdir, remove, writeFile } from "@tauri-apps/plugin-fs";
 import * as path from '@tauri-apps/api/path';
 import { ChapterT, NovelT } from "../sources/types";
-import { invoke } from "@tauri-apps/api/core";
 import { SOURCES } from "../sources/sources";
 import { load } from "@tauri-apps/plugin-store";
 
@@ -40,7 +39,8 @@ export const saveNovelCover = async (novel: NovelT) => {
 		if (!coverURL) return;
 		const novelDir = await getNovelDir(novel);
 
-		const cover = new Uint8Array(await invoke<ArrayBuffer>("fetch_image", { url: coverURL }));
+		const source = SOURCES[novel.source];
+		const cover = new Uint8Array(await source.fetchImage(coverURL));
 		const coverPath = await path.join(novelDir, "cover.png");
 		await writeFile(coverPath, cover);
 		return coverPath;

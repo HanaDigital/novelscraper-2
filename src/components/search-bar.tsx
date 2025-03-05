@@ -11,15 +11,26 @@ type SearchBarProps = {
 }
 export default function SearchBar({ handleSearch, handleClear, showClear = false, disabled = false }: SearchBarProps) {
 	const [searchQuery, setSearchQuery] = useState('');
+	const [searched, setSearched] = useState(false);
 
 	return (
-		<div className="flex items-center gap-2">
+		<div className="flex items-center">
 			<div className="relative w-full">
 				<Input
 					className="pr-14 rounded-lg bg-card"
 					value={searchQuery}
-					onChange={e => setSearchQuery(e.target.value)}
-					onKeyDown={e => e.key === 'Enter' && handleSearch(searchQuery)}
+					onChange={e => {
+						setSearchQuery(e.target.value)
+						if (!e.target.value) {
+							setSearched(false);
+						}
+					}}
+					onKeyDown={e => {
+						if (e.key === 'Enter') {
+							handleSearch(searchQuery);
+							setSearched(true);
+						}
+					}}
 					type="text"
 					placeholder='Search'
 					disabled={disabled}
@@ -28,11 +39,12 @@ export default function SearchBar({ handleSearch, handleClear, showClear = false
 					{disabled ? <CircleDashed className="animate-spin" /> : <Search />}
 				</Button>
 			</div>
-			<div className={`overflow-hidden transition-all ${showClear ? "w-max pr-2" : "w-0"}`}>
+			<div className={`overflow-hidden transition-all ${(showClear || searched) ? "w-max pr-2 ml-2" : "w-0"}`}>
 				<Button
 					variant="secondary"
 					onClick={() => {
 						setSearchQuery("");
+						setSearched(false);
 						handleClear();
 					}}
 					disabled={disabled}
