@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
-import { ChapterT, NovelSource, NovelSourceProps, NovelT } from "./types";
+import { NovelT } from "./types";
 import { hashString } from "../utils";
+import { NovelSource, NovelSourceProps } from "./template";
 
 export class NovelFull extends NovelSource {
 

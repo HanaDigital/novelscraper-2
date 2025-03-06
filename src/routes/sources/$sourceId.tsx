@@ -2,8 +2,7 @@ import { CardUI, CardGridUI } from "@/components/card"
 import Page from '@/components/page'
 import SearchBar from "@/components/search-bar"
 import { Badge } from "@/components/ui/badge"
-import { SourceIDsT, SOURCES } from '@/lib/sources/sources'
-import { NovelSource } from "@/lib/sources/types"
+import { NovelSource, SourceIDsT, SOURCES } from '@/lib/sources/sources'
 import { activeNovelAtom, libraryStateAtom, searchHistoryAtom } from "@/lib/store"
 import { BookmarkSolid } from "@mynaui/icons-react"
 import { createFileRoute, useLocation } from '@tanstack/react-router'

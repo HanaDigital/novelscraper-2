@@ -21,5 +21,4 @@ export const SOURCES = {
 		cloudflareProtected: false,
 	}),
 } as const;
-
 export type SourceIDsT = keyof typeof SOURCES;
