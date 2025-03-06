@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 use tauri::AppHandle;
 use tauri_plugin_shell::ShellExt;
 

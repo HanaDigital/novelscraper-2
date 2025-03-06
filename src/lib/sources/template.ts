@@ -48,6 +48,7 @@ export class NovelSource {
 	}
 
 	async downloadChapters(novel: NovelT, batchSize: number, batchDelay: number, startFromChapterIndex = 0): Promise<ChapterT[]> {
+		await this.loadCFHeaders();
 		const chapters = await invoke<ChapterT[]>('download_novel_chapters', {
 			novel_id: novel.id,
 			novel_url: novel.url,
@@ -56,21 +57,22 @@ export class NovelSource {
 			batch_size: batchSize,
 			batch_delay: batchDelay,
 			start_downloading_from_index: startFromChapterIndex,
+			cf_headers: this.cfHeaders,
 		});
 		return chapters;
 	}
 
 	async fetchHTML(url: string): Promise<string> {
-		await this.setCFHeaders();
+		await this.loadCFHeaders();
 		return await invoke<string>('fetch_html', { url, headers: this.cfHeaders });
 	}
 
 	async fetchImage(url: string): Promise<ArrayBuffer> {
-		await this.setCFHeaders();
+		await this.loadCFHeaders();
 		return await invoke<ArrayBuffer>('fetch_image', { url, headers: this.cfHeaders });
 	}
 
-	private async setCFHeaders() {
+	private async loadCFHeaders() {
 		if (this.cloudflareProtected) {
 			this.cfHeaders = await getCloudflareHeaders(this.url);
 			this.cfHeadersLastFetchedAt = new Date();

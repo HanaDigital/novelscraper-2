@@ -1,10 +1,9 @@
-use std::collections::HashMap;
-
-use tauri::{AppHandle, Emitter};
-use tauri_plugin_shell::ShellExt;
-
 mod docker;
 mod source;
+
+use source::types::{Chapter, DownloadData, DownloadStatus, NovelData};
+use std::collections::HashMap;
+use tauri::{AppHandle, Emitter};
 
 #[tauri::command(rename_all = "snake_case")]
 async fn download_novel_chapters(
@@ -16,10 +15,11 @@ async fn download_novel_chapters(
     batch_size: usize,
     batch_delay: usize,
     start_downloading_from_index: usize,
-) -> Result<Vec<source::Chapter>, String> {
+    cf_headers: Option<HashMap<String, String>>,
+) -> Result<Vec<Chapter>, String> {
     match source::download_novel_chapters(
         &app,
-        source::NovelData {
+        NovelData {
             novel_id: novel_id.to_string(),
             novel_url: novel_url.to_string(),
             source_id: source_id.to_string(),
@@ -27,6 +27,7 @@ async fn download_novel_chapters(
             batch_size,
             batch_delay,
             start_downloading_from_index,
+            cf_headers,
         },
     )
     .await
@@ -34,9 +35,9 @@ async fn download_novel_chapters(
         Ok(chapters) => {
             app.emit(
                 "download-status",
-                source::DownloadData {
+                DownloadData {
                     novel_id: novel_id.to_string(),
-                    status: source::DownloadStatus::Completed,
+                    status: DownloadStatus::Completed,
                     downloaded_chapters_count: chapters.len(),
                     downloaded_chapters: Some(chapters.clone()),
                 },
@@ -47,9 +48,9 @@ async fn download_novel_chapters(
         Err(e) => {
             app.emit(
                 "download-status",
-                source::DownloadData {
+                DownloadData {
                     novel_id: novel_id.to_string(),
-                    status: source::DownloadStatus::Error,
+                    status: DownloadStatus::Error,
                     downloaded_chapters_count: 0,
                     downloaded_chapters: None,
                 },
@@ -62,7 +63,7 @@ async fn download_novel_chapters(
 
 #[tauri::command]
 async fn fetch_html(url: &str, headers: Option<HashMap<String, String>>) -> Result<String, String> {
-    source::fetch_html(url, headers).await
+    source::fetch_html(url, &headers).await
 }
 
 #[tauri::command]
@@ -70,7 +71,7 @@ async fn fetch_image(
     url: &str,
     headers: Option<HashMap<String, String>>,
 ) -> Result<Vec<u8>, String> {
-    source::fetch_image(url, headers).await
+    source::fetch_image(url, &headers).await
 }
 
 #[tauri::command]

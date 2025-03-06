@@ -1,28 +1,12 @@
+pub mod novelbin;
 pub mod novelfull;
+pub mod types;
 
-use std::{collections::HashMap, time::Duration};
+use std::collections::HashMap;
 
 use isahc::{prelude::*, Request};
-use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
-
-#[derive(Clone, Debug, Serialize)]
-pub struct NovelData {
-    pub novel_id: String,
-    pub novel_url: String,
-    pub source_id: String,
-    pub source_url: String,
-    pub batch_size: usize,
-    pub batch_delay: usize,
-    pub start_downloading_from_index: usize,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Chapter {
-    pub title: String,
-    pub url: String,
-    pub content: Option<String>,
-}
+use types::{Chapter, DownloadStatus, NovelData};
 
 pub async fn download_novel_chapters(
     app: &AppHandle,
@@ -30,34 +14,20 @@ pub async fn download_novel_chapters(
 ) -> Result<Vec<Chapter>, String> {
     if novel_data.source_id == "novelfull" {
         return novelfull::download_novel_chapters(app, novel_data).await;
+    } else if novel_data.source_id == "novelbin" {
+        return novelbin::download_novel_chapters(app, novel_data).await;
     }
     Err(format!("Source {} not found", novel_data.source_id))
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum DownloadStatus {
-    Downloading,
-    Paused,
-    Completed,
-    Cancelled,
-    Error,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DownloadData {
-    pub novel_id: String,
-    pub status: DownloadStatus,
-    pub downloaded_chapters_count: usize,
-    pub downloaded_chapters: Option<Vec<Chapter>>,
-}
-
 pub async fn fetch_html(
     url: &str,
-    headers: Option<HashMap<String, String>>,
+    headers: &Option<HashMap<String, String>>,
 ) -> Result<String, String> {
     let mut req_builder = Request::get(url);
+    println!("!!!URL & HEADERS: {}\n{:?}", url, headers);
     if headers.is_some() {
-        for (key, value) in headers.unwrap() {
+        for (key, value) in headers.as_ref().unwrap() {
             req_builder = req_builder.header(key, value);
         }
     }
@@ -70,6 +40,7 @@ pub async fn fetch_html(
         }
     };
     let text_result = res.text();
+    // println!("!!!URL Response: {:?}", text_result);
     match text_result {
         Ok(text) => Ok(text),
         Err(e) => {
@@ -80,11 +51,11 @@ pub async fn fetch_html(
 
 pub async fn fetch_image(
     url: &str,
-    headers: Option<HashMap<String, String>>,
+    headers: &Option<HashMap<String, String>>,
 ) -> Result<Vec<u8>, String> {
     let mut req_builder = Request::get(url);
     if headers.is_some() {
-        for (key, value) in headers.unwrap() {
+        for (key, value) in headers.as_ref().unwrap() {
             req_builder = req_builder.header(key, value);
         }
     }

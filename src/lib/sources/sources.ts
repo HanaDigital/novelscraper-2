@@ -9,7 +9,7 @@ export const SOURCES = {
 		name: 'NovelBin',
 		tags: ['Recommended'],
 		logo: NovelBinLogo,
-		url: 'https://novelbin.me',
+		url: 'https://novelbin.com',
 		cloudflareProtected: false,
 	}),
 	"novelfull": new NovelFull({
