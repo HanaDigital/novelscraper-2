@@ -7,13 +7,17 @@ type TooltipUIProps = {
 	content: ReactNode;
 	side?: "top" | "right" | "bottom" | "left";
 	sideOffset?: number;
+	className?: string;
 }
-export function TooltipUI({ children, content, side, sideOffset }: TooltipUIProps) {
+export function TooltipUI({ children, content, side, sideOffset, className = "" }: TooltipUIProps) {
 	return (
 		<TooltipProvider>
 			<Tooltip>
 				<TooltipTrigger>{children}</TooltipTrigger>
-				<TooltipContent className="bg-background border shadow-lg text-gray-500 font-medium" side={side} sideOffset={sideOffset}>{content}</TooltipContent>
+				<TooltipContent
+					className={`bg-background border shadow-lg text-gray-500 font-medium ${className}`}
+					side={side} sideOffset={sideOffset}
+				>{content}</TooltipContent>
 			</Tooltip>
 		</TooltipProvider>
 	)

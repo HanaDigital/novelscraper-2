@@ -38,7 +38,7 @@ export function H4({ children, className }: TypographyProps) {
 
 export function P({ children, className }: TypographyProps) {
     return (
-        <p className={`leading-7 ${className}`}>
+        <p className={`${className}`}>
             {children}
         </p>
     )
