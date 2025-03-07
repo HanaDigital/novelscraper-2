@@ -5,6 +5,7 @@ pub mod types;
 use std::collections::HashMap;
 
 use isahc::{prelude::*, Request};
+use regex::Regex;
 use tauri::AppHandle;
 use types::{Chapter, DownloadStatus, NovelData};
 
@@ -74,4 +75,27 @@ pub async fn fetch_image(
             return Err(e.to_string());
         }
     }
+}
+
+fn clean_chapter_html(html: &mut String) -> String {
+    let class_re = Regex::new(r#"class=".*?""#).unwrap();
+    let mut html = class_re.replace_all(&html, "").to_string();
+    let id_re = Regex::new(r#"id=".*?""#).unwrap();
+    html = id_re.replace_all(&html, "").to_string();
+    let style_re = Regex::new(r#"style=".*?""#).unwrap();
+    html = style_re.replace_all(&html, "").to_string();
+    let data_re = Regex::new(r#"data-.*?=".*?""#).unwrap();
+    html = data_re.replace_all(&html, "").to_string();
+    let comment_re = Regex::new(r#"<!--.*?-->"#).unwrap();
+    html = comment_re.replace_all(&html, "").to_string();
+    let iframe_re = Regex::new(r#"<iframe.*?</iframe>"#).unwrap();
+    html = iframe_re.replace_all(&html, "").to_string();
+    let script_re = Regex::new(r#"<script.*?</script>"#).unwrap();
+    html = script_re.replace_all(&html, "").to_string();
+
+    // Fix unclosed br tags
+    let br_re = Regex::new(r#"<br.*?>"#).unwrap();
+    html = br_re.replace_all(&html, "<br />").to_string();
+
+    return html;
 }

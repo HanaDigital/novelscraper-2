@@ -38,4 +38,5 @@ export type DownloadDataT = {
 	status: "Downloading" | "Paused" | "Completed" | "Cancelled" | "Error";
 	downloaded_chapters_count: number;
 	downloaded_chapters?: ChapterT[];
+	chapters_saved: boolean;
 }

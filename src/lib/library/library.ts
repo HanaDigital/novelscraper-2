@@ -18,26 +18,30 @@ export const createLibraryDir = async (libraryRootPath: string, subDir = "") => 
 
 export const saveNovelEpub = async (novel: NovelT, epub: Uint8Array, libraryRootPath: string) => {
 	try {
-		const source = SOURCES[novel.source];
-		const dir = await path.join(libraryRootPath, source.name);
-		const dirExists = await exists(dir);
-		if (!dirExists) await mkdir(dir, { recursive: true });
-
-		const novelFilename = getFilenameFromStr(novel.title) + ".epub";
-		const epubPath = await path.join(dir, novelFilename);
+		const epubPath = await getNovelPath(novel, libraryRootPath);
 		await writeFile(epubPath, epub);
-
 	} catch (e) {
 		console.error(e);
 		await message(`Couldn't save novel epub for ${novel.title}!`, { title: 'NovelScraper Library', kind: 'error' });
 	}
 }
 
+export const getNovelPath = async (novel: NovelT, libraryRootPath: string) => {
+	const source = SOURCES[novel.source];
+	const dir = await path.join(libraryRootPath, source.name);
+	const dirExists = await exists(dir);
+	if (!dirExists) await mkdir(dir, { recursive: true });
+
+	const novelFilename = getFilenameFromStr(novel.title) + ".epub";
+	const novelPath = await path.join(dir, novelFilename);
+	return novelPath;
+}
+
 export const saveNovelCover = async (novel: NovelT) => {
 	try {
 		const coverURL = novel.coverURL ?? novel.thumbnailURL;
 		if (!coverURL) return;
-		const novelDir = await getNovelDir(novel);
+		const novelDir = await getNovelDataDir(novel);
 
 		const source = SOURCES[novel.source];
 		const cover = new Uint8Array(await source.fetchImage(coverURL));
@@ -77,7 +81,7 @@ export const getNovelChapters = async (novel: NovelT) => {
 
 export const deleteNovelData = async (novel: NovelT) => {
 	try {
-		const novelDir = await getNovelDir(novel);
+		const novelDir = await getNovelDataDir(novel);
 		await remove(novelDir, { recursive: true });
 	} catch (e) {
 		console.error(e);
@@ -89,7 +93,7 @@ export const getFilenameFromStr = (str: string) => {
 	return str.replace(/[^a-zA-Z0-9]/g, "_");
 }
 
-const getNovelDir = async (novel: NovelT) => {
+const getNovelDataDir = async (novel: NovelT) => {
 	const dir = await path.appDataDir();
 	const novelDir = await path.join(dir, "novel-data", novel.source as string, novel.id);
 	const dirExists = await exists(novelDir);
@@ -98,7 +102,7 @@ const getNovelDir = async (novel: NovelT) => {
 }
 
 const getNovelStore = async (novel: NovelT) => {
-	const novelDir = await getNovelDir(novel);
+	const novelDir = await getNovelDataDir(novel);
 	const novelStore = await load(`${novelDir}/${novel.id}-store.json`, { autoSave: false });
 	return novelStore;
 }

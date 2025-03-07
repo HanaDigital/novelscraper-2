@@ -44,7 +44,7 @@ pub async fn download_novel_chapters(
                 novel_id: novel_data.novel_id.clone(),
                 status: super::DownloadStatus::Downloading,
                 downloaded_chapters_count: download_count,
-                downloaded_chapters: Some(chapters_batch.to_vec()),
+                downloaded_chapters: Some(chapters[batch_start..batch_end].to_vec()),
             },
         )
         .unwrap();
@@ -94,7 +94,8 @@ fn get_chapter_content(chapter: &mut super::Chapter, chapter_html: &str) {
     let document = kuchikiki::parse_html().one(chapter_html);
 
     let chapter_content_node = document.select_first("#chr-content").unwrap();
-    let mut chapter_content_html = chapter_content_node.as_node().to_string();
+    let mut chapter_content_html =
+        super::clean_chapter_html(&mut chapter_content_node.as_node().to_string());
 
     let chapter_title = document
         .select_first("#chapter .chr-title")
@@ -108,29 +109,10 @@ fn get_chapter_content(chapter: &mut super::Chapter, chapter_html: &str) {
 
     let ad_re = Regex::new(r#"<div class="PUBFUTURE">.*?</div>"#).unwrap();
     chapter_content_html = ad_re.replace_all(&chapter_content_html, "").to_string();
-    let class_re = Regex::new(r#"class=".*?""#).unwrap();
-    chapter_content_html = class_re.replace_all(&chapter_content_html, "").to_string();
-    let id_re = Regex::new(r#"id=".*?""#).unwrap();
-    chapter_content_html = id_re.replace_all(&chapter_content_html, "").to_string();
-    let style_re = Regex::new(r#"style=".*?""#).unwrap();
-    chapter_content_html = style_re.replace_all(&chapter_content_html, "").to_string();
-    let data_re = Regex::new(r#"data-.*?=".*?""#).unwrap();
-    chapter_content_html = data_re.replace_all(&chapter_content_html, "").to_string();
-    let comment_re = Regex::new(r#"<!--.*?-->"#).unwrap();
-    chapter_content_html = comment_re
-        .replace_all(&chapter_content_html, "")
-        .to_string();
-    let iframe_re = Regex::new(r#"<iframe.*?</iframe>"#).unwrap();
-    chapter_content_html = iframe_re.replace_all(&chapter_content_html, "").to_string();
-    let script_re = Regex::new(r#"<script.*?</script>"#).unwrap();
-    chapter_content_html = script_re.replace_all(&chapter_content_html, "").to_string();
     let schedule_re = Regex::new(r#"<div class="schedule-text">.*?</div>"#).unwrap();
     chapter_content_html = schedule_re
         .replace_all(&chapter_content_html, "")
         .to_string();
-
-    // Remove empty paragraphs
-    // chapter_content_html = chapter_content_html.replace("<p></p>", "");
 
     chapter.content = Some(chapter_content_html);
 }

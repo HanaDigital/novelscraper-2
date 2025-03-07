@@ -11,7 +11,7 @@ type TooltipUIProps = {
 }
 export function TooltipUI({ children, content, side, sideOffset, className = "" }: TooltipUIProps) {
 	return (
-		<TooltipProvider>
+		<TooltipProvider delayDuration={200}>
 			<Tooltip>
 				<TooltipTrigger>{children}</TooltipTrigger>
 				<TooltipContent

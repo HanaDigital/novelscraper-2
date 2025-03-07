@@ -11,6 +11,7 @@ import * as path from '@tauri-apps/api/path';
 import { createLibraryDir, saveNovelChapters } from '@/lib/library/library';
 import { listen } from "@tauri-apps/api/event";
 import { DownloadDataT } from "@/lib/sources/types";
+import { message } from "@tauri-apps/plugin-dialog";
 
 export const Route = createRootRoute({
 	component: RootComponent,
@@ -21,7 +22,9 @@ function RootComponent() {
 	const [appStore, setAppStore] = useState<Store>();
 	const [appState, setAppState] = useAtom(appStateAtom);
 	const [libraryState, setLibraryState] = useAtom(libraryStateAtom);
-	const setDownloadStatus = useSetAtom(downloadStatusAtom);
+	const [downloadStatus, setDownloadStatus] = useAtom(downloadStatusAtom);
+
+	const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ [key: string]: "save" }>({});
 
 	useEffect(() => {
 		loadStore();
@@ -38,11 +41,19 @@ function RootComponent() {
 
 		const downloadStatusListenerP = listen<DownloadDataT>("download-status", (event) => {
 			const data = event.payload;
+
 			setDownloadStatus((state) => {
 				state[data.novel_id].status = data.status;
+
 				if (data.status === "Downloading") {
+					state[data.novel_id].status = data.status;
 					state[data.novel_id].downloaded_chapters_count = data.downloaded_chapters_count;
-					state[data.novel_id].downloaded_chapters?.concat(data.downloaded_chapters ?? []);
+					state[data.novel_id].downloaded_chapters = [
+						...(state[data.novel_id].downloaded_chapters ?? []),
+						...(data.downloaded_chapters ?? [])
+					];
+				} else {
+					setPendingStatusUpdate(updates => ({ ...updates, [data.novel_id]: "save" }));
 				}
 			});
 		});
@@ -51,6 +62,23 @@ function RootComponent() {
 			downloadStatusListenerP.then((unsub) => unsub());
 		}
 	}, [appInitialized, appStore, libraryState]);
+
+	useEffect(() => {
+		if (!appInitialized || !appStore) return;
+		Object.keys(pendingStatusUpdate).forEach((novel_id) => {
+			const status = pendingStatusUpdate[novel_id];
+			if (status === "save") {
+				const data = downloadStatus[novel_id];
+				if (!data || data.status === "Downloading") return;
+				saveNovelChapters(libraryState.novels[novel_id], data.downloaded_chapters ?? []).then(() => {
+					setPendingStatusUpdate((updates) => {
+						delete updates[novel_id];
+						return updates;
+					});
+				});
+			}
+		});
+	}, [downloadStatus, pendingStatusUpdate]);
 
 	const loadStore = async () => {
 		const store = await load('store.json');
