@@ -1,7 +1,7 @@
 use crate::AppState;
 
 use super::is_novel_download_cancelled;
-use super::types::{Chapter, DownloadData, DownloadStatus, NovelData};
+use super::types::{Chapter, DownloadData, NovelData};
 use futures::future::join_all;
 use kuchikiki::traits::*;
 use regex::Regex;
