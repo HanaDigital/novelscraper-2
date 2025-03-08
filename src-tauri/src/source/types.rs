@@ -21,7 +21,7 @@ pub struct Chapter {
     pub content: Option<String>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum DownloadStatus {
     Downloading,
     Paused,

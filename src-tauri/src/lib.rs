@@ -3,12 +3,14 @@ mod source;
 
 use source::types::{Chapter, DownloadData, DownloadStatus, NovelData};
 use std::collections::HashMap;
-use tauri::{AppHandle, Emitter};
+use std::sync::Mutex;
+use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_updater::UpdaterExt;
 
 #[tauri::command(rename_all = "snake_case")]
 async fn download_novel_chapters(
     app: AppHandle,
+    state: State<'_, Mutex<AppState>>,
     novel_id: &str,
     novel_url: &str,
     source_id: &str,
@@ -18,8 +20,12 @@ async fn download_novel_chapters(
     start_downloading_from_index: usize,
     cf_headers: Option<HashMap<String, String>>,
 ) -> Result<Vec<Chapter>, String> {
+    source::update_novel_download_status(&state, novel_id, &DownloadStatus::Downloading)
+        .await
+        .unwrap();
     match source::download_novel_chapters(
         &app,
+        &state,
         NovelData {
             novel_id: novel_id.to_string(),
             novel_url: novel_url.to_string(),
@@ -85,10 +91,26 @@ fn start_cloudflare_resolver(app: AppHandle, port: usize) -> bool {
     return docker::start_cloudflare_resolver(&app, port);
 }
 
+#[derive(Default)]
+struct AppState {
+    novel_status: HashMap<String, source::types::DownloadStatus>,
+}
+#[tauri::command(rename_all = "snake_case")]
+async fn update_novel_download_status(
+    state: State<'_, Mutex<AppState>>,
+    novel_id: &str,
+    status: source::types::DownloadStatus,
+) -> Result<source::types::DownloadStatus, ()> {
+    println!("update_novel_download_status: {:?}", status);
+    return source::update_novel_download_status(&state, novel_id, &status).await;
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
+            app.manage(Mutex::new(AppState::default()));
+
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 update(handle).await.unwrap();
@@ -106,6 +128,7 @@ pub fn run() {
             fetch_html,
             fetch_image,
             download_novel_chapters,
+            update_novel_download_status,
             check_docker_status,
             start_cloudflare_resolver
         ])

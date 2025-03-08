@@ -6,17 +6,21 @@ use std::collections::HashMap;
 
 use isahc::{prelude::*, Request};
 use regex::Regex;
-use tauri::AppHandle;
+use std::sync::Mutex;
+use tauri::{AppHandle, State};
 use types::{Chapter, DownloadStatus, NovelData};
+
+use crate::AppState;
 
 pub async fn download_novel_chapters(
     app: &AppHandle,
+    state: &State<'_, Mutex<AppState>>,
     novel_data: NovelData,
 ) -> Result<Vec<Chapter>, String> {
     if novel_data.source_id == "novelfull" {
-        return novelfull::download_novel_chapters(app, novel_data).await;
+        return novelfull::download_novel_chapters(app, state, novel_data).await;
     } else if novel_data.source_id == "novelbin" {
-        return novelbin::download_novel_chapters(app, novel_data).await;
+        return novelbin::download_novel_chapters(app, state, novel_data).await;
     }
     Err(format!("Source {} not found", novel_data.source_id))
 }
@@ -26,7 +30,7 @@ pub async fn fetch_html(
     headers: &Option<HashMap<String, String>>,
 ) -> Result<String, String> {
     let mut req_builder = Request::get(url);
-    println!("!!!URL & HEADERS: {}\n{:?}", url, headers);
+    // println!("!!!URL & HEADERS: {}\n{:?}", url, headers);
     if headers.is_some() {
         for (key, value) in headers.as_ref().unwrap() {
             req_builder = req_builder.header(key, value);
@@ -75,6 +79,26 @@ pub async fn fetch_image(
             return Err(e.to_string());
         }
     }
+}
+
+pub async fn update_novel_download_status(
+    state: &State<'_, Mutex<AppState>>,
+    novel_id: &str,
+    status: &types::DownloadStatus,
+) -> Result<types::DownloadStatus, ()> {
+    let mut state = state.lock().unwrap();
+    state
+        .novel_status
+        .insert(novel_id.to_string(), status.clone());
+    Ok(status.clone())
+}
+
+pub async fn is_novel_download_cancelled(
+    state: &State<'_, Mutex<AppState>>,
+    novel_id: &str,
+) -> bool {
+    let state = state.lock().unwrap();
+    return state.novel_status.get(novel_id).unwrap() == &DownloadStatus::Cancelled;
 }
 
 fn clean_chapter_html(html: &mut String) -> String {
