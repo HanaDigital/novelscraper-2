@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { SmallP, TinyP } from '@/components/typography'
 import { SOURCES } from '@/lib/sources/sources'
 import Page from '@/components/page'
 import { CardGridUI, CardUI } from "@/components/card"

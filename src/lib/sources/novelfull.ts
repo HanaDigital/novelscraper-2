@@ -17,7 +17,7 @@ export class NovelFull extends NovelSource {
 
 		const $ = cheerio.load(response);
 		const novels: NovelT[] = [];
-		$("#list-page .col-truyen-main .row").each((i, elem) => {
+		$("#list-page .col-truyen-main .row").each((_, elem) => {
 			const titleElem = $(elem).find("h3.truyen-title a")
 			const title = titleElem.text().trim();
 			let url = titleElem.attr("href") ?? "";
@@ -61,15 +61,15 @@ export class NovelFull extends NovelSource {
 		const coverURL = novelInfoElem.find(".info-holder .book img").attr("src");
 
 		const infoHolderElems = $(".info-holder > .info > div");
-		const authors = infoHolderElems.eq(0).find("a").map((i, elem) => $(elem).text().trim()).get();
+		const authors = infoHolderElems.eq(0).find("a").map((_, elem) => $(elem).text().trim()).get();
 		const alternativeTitles = infoHolderElems.eq(1).text().replace("Alternative names:", "").trim().split(", ");
-		const genres = infoHolderElems.eq(2).find("a").map((i, elem) => $(elem).text().trim()).get();
+		const genres = infoHolderElems.eq(2).find("a").map((_, elem) => $(elem).text().trim()).get();
 		const status = infoHolderElems.eq(4).find("a").text().trim();
 
 		// Get chapters per page
 		const chaptersElem = $("#list-chapter");
 		let chaptersPerPage = 0;
-		chaptersElem.find("ul.list-chapter").each((i, elem) => {
+		chaptersElem.find("ul.list-chapter").each((_, elem) => {
 			chaptersPerPage += $(elem).find("li").length;
 		});
 
@@ -86,7 +86,7 @@ export class NovelFull extends NovelSource {
 				const lastPageRes = await this.fetchHTML(lastPageUri.toString());
 				if (!lastPageRes) throw new Error('Failed to fetch last page!');
 				const lastPageDocument = cheerio.load(lastPageRes);
-				lastPageDocument("ul.list-chapter").each((i, elem) => {
+				lastPageDocument("ul.list-chapter").each((_, elem) => {
 					totalChapters += $(elem).find("li").length;
 				});
 			} catch (e) {

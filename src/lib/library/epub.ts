@@ -105,7 +105,7 @@ ${navPoints}
 		let items: any = [];
 		let itemRefs: any = [];
 
-		chapters.map((chapter, i) => {
+		chapters.map((_, i) => {
 			const id = i + 1;
 			items.push(`	<item id='s${id}' media-type='application/xhtml+xml' href='content/s${id}.xhtml'/>`)
 			itemRefs.push(`	<itemref idref='s${id}'/>`)

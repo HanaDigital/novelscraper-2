@@ -2,7 +2,9 @@ import { CardUI, CardGridUI } from "@/components/card"
 import Page from '@/components/page'
 import SearchBar from "@/components/search-bar"
 import { Badge } from "@/components/ui/badge"
-import { NovelSource, SourceIDsT, SOURCES } from '@/lib/sources/sources'
+import { SourceIDsT, SOURCES } from '@/lib/sources/sources'
+import { NovelSource } from "@/lib/sources/template"
+import { NovelT } from "@/lib/sources/types"
 import { activeNovelAtom, libraryStateAtom, searchHistoryAtom } from "@/lib/store"
 import { BookmarkSolid } from "@mynaui/icons-react"
 import { createFileRoute, useLocation } from '@tanstack/react-router'
@@ -37,10 +39,10 @@ function RouteComponent() {
 			await new Promise((resolve) => setTimeout(resolve, 500));
 			let searchedNovels = await source.searchNovels(query);
 			if (!searchedNovels.length) setNoSearchResultsFor(query);
-			searchedNovels = searchedNovels.map((n) => libraryState.novels[n.id] ?? n);
+			searchedNovels = searchedNovels.map((n: NovelT) => libraryState.novels[n.id] ?? n);
 			setSearchHistory((state) => {
 				let novels = state[sourceId as SourceIDsT];
-				searchedNovels.forEach((n) => {
+				searchedNovels.forEach((n: NovelT) => {
 					novels = novels.filter((n2) => n2.id !== n.id)
 				});
 				novels.unshift(...searchedNovels);

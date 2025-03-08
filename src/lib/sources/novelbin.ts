@@ -17,7 +17,7 @@ export class NovelBin extends NovelSource {
 
 		const $ = cheerio.load(response);
 		const novels: NovelT[] = [];
-		$("#list-page .col-novel-main .list-novel .row").each((i, elem) => {
+		$("#list-page .col-novel-main .list-novel .row").each((_, elem) => {
 			const titleElem = $(elem).find(".novel-title a")
 			const title = titleElem.text().trim();
 			let url = titleElem.attr("href") ?? "";
@@ -57,11 +57,11 @@ export class NovelBin extends NovelSource {
 		const coverURL = novelInfoElem.find(".info-holder .book img").attr("data-src");
 		const alternativeTitles = novelInfoElem.find("ul.info li").eq(0).text().replace("Alternative names:", "").trim().split(", ");
 		const authors: string[] = [];
-		novelInfoElem.find("ul.info li").eq(1).find("a").each((i, elem) => {
+		novelInfoElem.find("ul.info li").eq(1).find("a").each((_, elem) => {
 			authors.push($(elem).text().trim());
 		});
 		const genres: string[] = [];
-		novelInfoElem.find("ul.info li").eq(2).find("a").each((i, elem) => {
+		novelInfoElem.find("ul.info li").eq(2).find("a").each((_, elem) => {
 			genres.push($(elem).text().trim());
 		});
 		const status = novelInfoElem.find("ul.info li").eq(3).find("a").text().trim();
