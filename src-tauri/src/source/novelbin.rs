@@ -1,4 +1,7 @@
-use super::types::{Chapter, DownloadData, NovelData};
+use crate::AppState;
+
+use super::is_novel_download_cancelled;
+use super::types::{Chapter, DownloadData, DownloadStatus, NovelData};
 use futures::future::join_all;
 use kuchikiki::traits::*;
 use regex::Regex;
@@ -8,12 +11,19 @@ use tauri::{AppHandle, Emitter};
 
 pub async fn download_novel_chapters(
     app: &AppHandle,
+    state: &tauri::State<'_, std::sync::Mutex<AppState>>,
     novel_data: NovelData,
 ) -> Result<Vec<Chapter>, String> {
     let mut chapters = get_chapter_urls(&novel_data).await;
     let mut batch_index: usize = 0;
     while (batch_index * novel_data.batch_size) < chapters.len() {
         thread::sleep(Duration::from_secs(novel_data.batch_delay as u64));
+
+        // Check if the download is cancelled
+        if is_novel_download_cancelled(state, &novel_data.novel_id).await {
+            return Err(format!("Download cancelled for {}", novel_data.novel_id));
+        }
+
         let mut batch_start = batch_index * novel_data.batch_size;
         let batch_end = min((batch_index + 1) * novel_data.batch_size, chapters.len());
         if novel_data.start_downloading_from_index >= batch_end {

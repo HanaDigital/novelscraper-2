@@ -8,15 +8,16 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai/react";
 import { useEffect, useState } from "react";
 import clone from "clone";
 import { Button } from "@/components/ui/button";
-import { BookmarkMinusSolid, BookmarkPlusSolid, DownloadSolid, ExternalLink, FolderSolid, RefreshSolid } from "@mynaui/icons-react";
+import { BookmarkMinusSolid, BookmarkPlusSolid, DownloadSolid, ExternalLink, FolderSolid, RefreshSolid, StopSolid, XSquareSolid } from "@mynaui/icons-react";
 import { deleteNovelData, getNovelChapters, getNovelPath, saveNovelChapters, saveNovelCover, saveNovelEpub } from "@/lib/library/library";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import EpubTemplate from "@/lib/library/epub";
 import { message } from "@tauri-apps/plugin-dialog";
 import { TooltipUI } from "@/components/tooltip";
 import { Progress } from "@/components/ui/progress";
-import { P, TinyP } from "@/components/typography";
+import { TinyP } from "@/components/typography";
 import { revealItemInDir, openUrl } from '@tauri-apps/plugin-opener';
+import MissingImageBanner from "@/assets/ui/missing-image-banner.jpg";
 
 export const Route = createFileRoute('/novel')({
 	component: RouteComponent,
@@ -138,6 +139,17 @@ function RouteComponent() {
 		setIsDownloading(false);
 	}
 
+	const handleCancelDownload = async () => {
+		if (!novel) return;
+		try {
+			const novelSource = SOURCES[novel.source];
+			await novelSource.cancelDownload(novel);
+		} catch (e) {
+			console.error(e);
+			await message(`Couldn't cancel download for ${novel.title}`, { title: SOURCES[novel.source].name, kind: 'error' });
+		}
+	}
+
 	const handleOpenNovelFolder = async () => {
 		if (!novel) return;
 		try {
@@ -206,7 +218,10 @@ function RouteComponent() {
 						<Button size="icon" onClick={handleAddToLibrary}><BookmarkPlusSolid /></Button>
 					</TooltipUI>}
 					{novel.isInLibrary && <TooltipUI content="Remove from Library" side="bottom" sideOffset={8}>
-						<Button size="icon" variant="destructive" onClick={handleRemoveFromLibrary}><BookmarkMinusSolid /></Button>
+						<Button size="icon" variant="destructive" onClick={handleRemoveFromLibrary} disabled={
+							novelDownloadStatus?.status === "Downloading"
+							|| isDownloading
+						}><BookmarkMinusSolid /></Button>
 					</TooltipUI>}
 					<TooltipUI content="Refresh Metadata" side="bottom" sideOffset={8}>
 						<Button size="icon" variant="secondary" onClick={() => loadNovelMetadata(true)}><RefreshSolid /></Button>
@@ -214,13 +229,17 @@ function RouteComponent() {
 					<TooltipUI content="Open in Browser" side="bottom" sideOffset={8}>
 						<Button size="icon" variant="outline" onClick={handleOpenInBrowser}><ExternalLink /></Button>
 					</TooltipUI>
-					{novel.isInLibrary && <TooltipUI content="Download" side="bottom" sideOffset={8}>
-						<Button className="!p-0" size="icon" onClick={handleDownload} disabled={
-							novel.totalChapters === novel.downloadedChapters
-							|| isDownloading
-							|| novelDownloadStatus?.status === "Downloading"
-						}><DownloadSolid /></Button>
-					</TooltipUI>}
+					{(novel.isInLibrary && novelDownloadStatus?.status !== "Downloading") &&
+						<TooltipUI content="Download" side="bottom" sideOffset={8}>
+							<Button className="!p-0" size="icon" onClick={handleDownload} disabled={
+								novel.totalChapters === novel.downloadedChapters
+								|| isDownloading
+							}><DownloadSolid /></Button>
+						</TooltipUI>}
+					{(novel.isInLibrary && novelDownloadStatus?.status === "Downloading") &&
+						<TooltipUI content="Cancel Download" side="bottom" sideOffset={8}>
+							<Button className="!p-0" size="icon" variant="destructive" onClick={handleCancelDownload}><XSquareSolid /></Button>
+						</TooltipUI>}
 					{(novel.isInLibrary && novel.isDownloaded) && <TooltipUI content="Open Folder" side="bottom" sideOffset={8}>
 						<Button className="!p-0" size="icon" onClick={handleOpenNovelFolder}><FolderSolid /></Button>
 					</TooltipUI>}
@@ -238,11 +257,9 @@ function RouteComponent() {
 			</div>
 
 			<div className="grid grid-cols-[250px_auto] gap-4">
-				<img
-					className="w-full"
-					src={coverSrc}
-					alt="Novel Cover"
-				/>
+				<object className="w-full" data={coverSrc} type="image/jpg">
+					<img src={MissingImageBanner} alt="Novel Cover" />
+				</object>
 
 				{/* <P><b>Author:</b> {novel.authors.join(', ')}</P>
 					<P><b>Genres:</b> {novel.genres.join(', ')}</P>

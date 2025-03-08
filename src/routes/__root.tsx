@@ -114,7 +114,7 @@ function RootComponent() {
 				<AppSidebar />
 				<Outlet />
 			</SidebarProvider>
-			<TanStackRouterDevtools position='bottom-right' />
+			{/* <TanStackRouterDevtools position='bottom-right' /> */}
 		</Fragment>
 	)
 }

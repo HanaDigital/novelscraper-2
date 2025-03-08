@@ -62,6 +62,14 @@ export class NovelSource {
 		return chapters;
 	}
 
+	async cancelDownload(novel: NovelT): Promise<void> {
+		console.log('Cancelling download for', novel.id);
+		await invoke<String>('update_novel_download_status', {
+			novel_id: novel.id,
+			status: 'Cancelled',
+		});
+	}
+
 	async fetchHTML(url: string): Promise<string> {
 		await this.loadCFHeaders();
 		return await invoke<string>('fetch_html', { url, headers: this.cfHeaders });
