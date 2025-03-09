@@ -40,7 +40,8 @@ export class NovelFull extends NovelSource {
 				isDownloaded: false,
 				isInLibrary: false,
 				isFavorite: false,
-				isMetadataLoaded: false
+				isMetadataLoaded: false,
+				isUpdating: false,
 			};
 			novels.push(novel);
 		});
