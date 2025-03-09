@@ -18,9 +18,11 @@ pub async fn download_novel_chapters(
     let total_pages = get_total_pages(&novel_data).await;
 
     let mut chapters: Vec<super::Chapter> = vec![];
+    let mut max_chapters_per_page = 0;
     for page_num in 1..=total_pages {
         // Get all the chapters on the current page
         let mut page_chapters = get_page_chapter_urls(&novel_data, page_num).await;
+        max_chapters_per_page = max_chapters_per_page.max(page_chapters.len());
 
         let mut batch_index: usize = 0;
         while (batch_index * novel_data.batch_size) < page_chapters.len() {
@@ -32,16 +34,18 @@ pub async fn download_novel_chapters(
             }
 
             let mut batch_start = batch_index * novel_data.batch_size;
+            let batch_start_index = batch_start + (max_chapters_per_page * (page_num - 1));
             let batch_end = min(
                 (batch_index + 1) * novel_data.batch_size,
                 page_chapters.len(),
             );
-            if novel_data.start_downloading_from_index >= batch_end {
+            let batch_end_index = batch_end + (max_chapters_per_page * (page_num - 1));
+            if novel_data.start_downloading_from_index >= batch_end_index {
                 batch_index += 1;
                 continue;
             }
-            if novel_data.start_downloading_from_index > batch_start {
-                batch_start = novel_data.start_downloading_from_index;
+            if novel_data.start_downloading_from_index > batch_start_index {
+                batch_start += novel_data.start_downloading_from_index - batch_start_index;
             }
 
             let chapters_batch = &mut page_chapters[batch_start..batch_end];

@@ -31,6 +31,7 @@ export type NovelT = {
 	updatedMetadataAt?: string;
 	updatedChaptersAt?: string;
 	downloadedAt?: string;
+	isUpdating: boolean;
 }
 
 export type DownloadDataT = {

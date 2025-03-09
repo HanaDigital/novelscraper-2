@@ -6,6 +6,7 @@ import { ChapterT, NovelT } from "../sources/types";
 import { SOURCES } from "../sources/sources";
 import { load } from "@tauri-apps/plugin-store";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import clone from "clone";
 
 export const createLibraryDir = async (libraryRootPath: string, subDir = "") => {
 	try {
@@ -141,4 +142,39 @@ const getNovelStore = async (novel: NovelT) => {
 	const novelDir = await getNovelDataDir(novel);
 	const novelStore = await load(`${novelDir}/${novel.id}-store.json`, { autoSave: false });
 	return novelStore;
+}
+
+export const fetchMetadataForNovel = async (novel: NovelT) => {
+	try {
+		const novelSource = SOURCES[novel.source];
+		const _novel = await novelSource.getNovelMetadata(clone(novel));
+		_novel.isMetadataLoaded = true;
+		_novel.updatedMetadataAt = new Date().toISOString();
+		_novel.updatedChaptersAt = new Date().toISOString();
+		return _novel;
+	} catch (e) {
+		console.error(e);
+		return novel;
+	}
+}
+
+export const fetchMetadataForNovels = async (novels: NovelT[]) => {
+	const updatedNovels: NovelT[] = [];
+
+	const sourceGroup: { [key: string]: NovelT[] } = {};
+	for (const novel of novels) {
+		const source = SOURCES[novel.source];
+		if (!sourceGroup[source.name]) sourceGroup[source.name] = [];
+		sourceGroup[source.name].push(novel);
+	}
+
+	const fetchSourceMetadata = async (source: string) => {
+		for (let novel of sourceGroup[source]) {
+			const _novel = await fetchMetadataForNovel(novel);
+			updatedNovels.push(_novel);
+		}
+	}
+
+	await Promise.all(Object.keys(sourceGroup).map(fetchSourceMetadata));
+	return updatedNovels;
 }

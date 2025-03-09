@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import clone from "clone";
 import { Button } from "@/components/ui/button";
 import { BookmarkMinusSolid, BookmarkPlusSolid, DownloadSolid, ExternalLink, FolderSolid, ImageSolid, RefreshSolid, XSquareSolid } from "@mynaui/icons-react";
-import { deleteNovelData, getNovelChapters, getNovelPath, getUnCachedFileSrc, saveNovelCover, saveNovelCoverFromLocalFile, saveNovelEpub } from "@/lib/library/library";
+import { deleteNovelData, fetchMetadataForNovel, getNovelChapters, getNovelPath, getUnCachedFileSrc, saveNovelCover, saveNovelCoverFromLocalFile, saveNovelEpub } from "@/lib/library/library";
 import EpubTemplate from "@/lib/library/epub";
 import { ask, message } from "@tauri-apps/plugin-dialog";
 import { TooltipUI } from "@/components/tooltip";
@@ -25,7 +25,7 @@ export const Route = createFileRoute('/novel')({
 function RouteComponent() {
 	const [activeNovel, setActiveNovel] = useAtom(activeNovelAtom);
 	const setSearchHistory = useSetAtom(searchHistoryAtom);
-	const setLibraryState = useSetAtom(libraryStateAtom);
+	const [libraryState, setLibraryState] = useAtom(libraryStateAtom);
 	const [novel, setNovel] = useState<NovelT>();
 	const [coverSrc, setCoverSrc] = useState<string>();
 	const [novelDownloadStatus, setNovelDownloadStatus] = useState<DownloadDataT>();
@@ -37,6 +37,11 @@ function RouteComponent() {
 	useEffect(() => {
 		loadNovelMetadata();
 	}, []);
+
+	useEffect(() => {
+		if (!activeNovel) return;
+		updateState(libraryState.novels[activeNovel.id], false);
+	}, [libraryState.novels[activeNovel?.id ?? ""]]);
 
 	useEffect(() => {
 		if (!activeNovel) return;
@@ -65,12 +70,10 @@ function RouteComponent() {
 
 	const fetchMetadata = async (_novel: NovelT) => {
 		try {
-			const novelSource = SOURCES[_novel.source];
 			await new Promise((resolve) => setTimeout(resolve, 500));
-			_novel = await novelSource.getNovelMetadata(clone(_novel));
-			_novel.isMetadataLoaded = true;
-			_novel.updatedMetadataAt = new Date().toISOString();
-			if (_novel.totalChapters !== _novel.totalChapters) _novel.updatedChaptersAt = new Date().toISOString();
+			const updatedNovel = await fetchMetadataForNovel(_novel);
+			if (!updatedNovel) throw new Error("Failed to fetch metadata");
+			_novel = updatedNovel;
 		} catch (e) {
 			console.error(e);
 			await message(`Couldn't get metadata for ${_novel.title}`, { title: SOURCES[_novel.source].name, kind: 'error' });
@@ -241,7 +244,7 @@ function RouteComponent() {
 						}><BookmarkMinusSolid /></Button>
 					</TooltipUI>}
 					<TooltipUI content="Refresh Metadata" side="bottom" sideOffset={8}>
-						<Button size="icon" variant="secondary" onClick={() => loadNovelMetadata(true)}><RefreshSolid /></Button>
+						<Button size="icon" variant="secondary" onClick={() => loadNovelMetadata(true)} disabled={novel.isUpdating}><RefreshSolid /></Button>
 					</TooltipUI>
 					<TooltipUI content="Open in Browser" side="bottom" sideOffset={8}>
 						<Button size="icon" variant="outline" onClick={handleOpenInBrowser}><ExternalLink /></Button>
