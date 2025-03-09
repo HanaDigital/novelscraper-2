@@ -66,7 +66,7 @@ jobs:
               with:
                   tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
                   releaseName: "App v__VERSION__"
-                  releaseBody: "See the assets to download this version and install."
-                  releaseDraft: false
+                  releaseBody: "Download platforms:%0AWindows: NovelScraper_X.X.X_x64_en-US.msi%0AMacOS (Intel): NovelScraper_X.X.X_x64.dmg%0AMacOS (Apple Silicon): NovelScraper_X.X.X_aarch64.dmg%0ALinux: You can figure it out :D"
+                  releaseDraft: true
                   prerelease: false
                   args: ${{ matrix.args }}

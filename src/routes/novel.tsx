@@ -8,11 +8,10 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai/react";
 import { useEffect, useState } from "react";
 import clone from "clone";
 import { Button } from "@/components/ui/button";
-import { BookmarkMinusSolid, BookmarkPlusSolid, DownloadSolid, ExternalLink, FolderSolid, RefreshSolid, StopSolid, XSquareSolid } from "@mynaui/icons-react";
-import { deleteNovelData, getNovelChapters, getNovelPath, saveNovelChapters, saveNovelCover, saveNovelEpub } from "@/lib/library/library";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { BookmarkMinusSolid, BookmarkPlusSolid, DownloadSolid, ExternalLink, FolderSolid, ImageSolid, RefreshSolid, XSquareSolid } from "@mynaui/icons-react";
+import { deleteNovelData, getNovelChapters, getNovelPath, getUnCachedFileSrc, saveNovelCover, saveNovelCoverFromLocalFile, saveNovelEpub } from "@/lib/library/library";
 import EpubTemplate from "@/lib/library/epub";
-import { message } from "@tauri-apps/plugin-dialog";
+import { ask, message } from "@tauri-apps/plugin-dialog";
 import { TooltipUI } from "@/components/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { TinyP } from "@/components/typography";
@@ -53,8 +52,7 @@ function RouteComponent() {
 			if (!_novel.isMetadataLoaded || forceFetch) _novel = await fetchMetadata(_novel);
 
 			if (_novel.localCoverPath) {
-				const src = convertFileSrc(_novel.localCoverPath);
-				setCoverSrc(src);
+				setCoverSrc(getUnCachedFileSrc(_novel.localCoverPath));
 			} else {
 				setCoverSrc(_novel.coverURL ?? _novel.thumbnailURL);
 			}
@@ -174,6 +172,12 @@ function RouteComponent() {
 	const handleRemoveFromLibrary = async () => {
 		try {
 			if (!novel) return;
+			const isSure = await ask(`Are you sure you want to remove ${novel.title} from the library?`, {
+				title: 'NovelScraper Library',
+				kind: 'warning',
+			});
+			if (!isSure) return;
+
 			const libNovel = clone(novel);
 			libNovel.isInLibrary = false;
 			libNovel.addedToLibraryAt = undefined;
@@ -209,6 +213,19 @@ function RouteComponent() {
 		setNovel(_novel);
 	}
 
+	const handleChangeCover = async () => {
+		if (!novel || !novel.isInLibrary) return;
+		setIsLoading(true);
+		const localCoverPath = await saveNovelCoverFromLocalFile(novel);
+		if (localCoverPath) {
+			const libNovel = clone(novel);
+			libNovel.localCoverPath = localCoverPath;
+			updateState(libNovel, true);
+			setCoverSrc(getUnCachedFileSrc(localCoverPath));
+		}
+		setIsLoading(false);
+	}
+
 	if (!novel || isLoading) return <Loader />
 	return (
 		<Page>
@@ -229,12 +246,12 @@ function RouteComponent() {
 					<TooltipUI content="Open in Browser" side="bottom" sideOffset={8}>
 						<Button size="icon" variant="outline" onClick={handleOpenInBrowser}><ExternalLink /></Button>
 					</TooltipUI>
+					<TooltipUI content="Change Cover" side="bottom" sideOffset={8}>
+						<Button size="icon" variant="outline" onClick={handleChangeCover}><ImageSolid /></Button>
+					</TooltipUI>
 					{(novel.isInLibrary && novelDownloadStatus?.status !== "Downloading") &&
 						<TooltipUI content="Download" side="bottom" sideOffset={8}>
-							<Button className="!p-0" size="icon" onClick={handleDownload} disabled={
-								novel.totalChapters === novel.downloadedChapters
-								|| isDownloading
-							}><DownloadSolid /></Button>
+							<Button className="!p-0" size="icon" onClick={handleDownload} disabled={isDownloading}><DownloadSolid /></Button>
 						</TooltipUI>}
 					{(novel.isInLibrary && novelDownloadStatus?.status === "Downloading") &&
 						<TooltipUI content="Cancel Download" side="bottom" sideOffset={8}>

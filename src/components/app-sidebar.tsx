@@ -10,8 +10,8 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronDoubleRight, SquareSolid } from "@mynaui/icons-react";
-import { LargeP, TinyP } from "./typography";
+import { ChevronDoubleRight, CircleNotch, DownloadSolid, SquareSolid } from "@mynaui/icons-react";
+import { LargeP, P, TinyP } from "./typography";
 import { Button } from "./ui/button";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -19,6 +19,7 @@ import { app } from "@tauri-apps/api";
 import { useSetAtom } from "jotai/react";
 import { appStateAtom } from "@/lib/store";
 import { routes } from "@/lib/routes";
+import { invoke } from "@tauri-apps/api/core";
 
 export function AppSidebar() {
     const { resolvedLocation } = useRouterState();
@@ -26,9 +27,12 @@ export function AppSidebar() {
 
     const { toggleSidebar, open } = useSidebar();
     const [version, setVersion] = useState("");
+    const [newVersion, setNewVersion] = useState("");
+    const [isUpdating, setIsUpdating] = useState(false);
 
     useEffect(() => {
         app.getVersion().then(v => setVersion(v));
+        handleCheckForUpdates();
     }, []);
 
     useEffect(() => {
@@ -37,6 +41,25 @@ export function AppSidebar() {
             return state;
         });
     }, [open]);
+
+    const handleCheckForUpdates = async () => {
+        try {
+            const newVersion = await invoke<string>("check_for_update");
+            setNewVersion(newVersion);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    const handleInstallUpdate = async () => {
+        setIsUpdating(true);
+        try {
+            await invoke("install_update");
+        } catch (e) {
+            console.error(e);
+        }
+        setIsUpdating(false);
+    }
 
     return (
         <Sidebar collapsible="icon">
@@ -76,7 +99,23 @@ export function AppSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
-            <SidebarFooter className="flex items-end">
+            <SidebarFooter className="flex flex-col items-end">
+                {newVersion &&
+                    <SidebarMenu>
+                        <SidebarMenuItem className="flex gap-2 justify-center items-center">
+                            <SidebarMenuButton size="lg" className="!bg-card border border-green-900" onClick={handleInstallUpdate} disabled={isUpdating}>
+                                {isUpdating
+                                    ? <CircleNotch className="!size-7 animate-spin" />
+                                    : <DownloadSolid className="!size-7" />
+                                }
+                                <div className="flex-1 text-sm leading-tight flex-col gap-1">
+                                    <P className="truncate">New Update</P>
+                                    <TinyP className="truncate">v{newVersion}</TinyP>
+                                </div>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                }
                 <Button className="size-8" variant="outline" size="icon" onClick={toggleSidebar}>
                     <ChevronDoubleRight className={`transition-transform ${open ? "rotate-180" : ""}`} />
                 </Button>
