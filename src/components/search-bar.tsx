@@ -8,8 +8,9 @@ type SearchBarProps = {
 	handleClear: () => void;
 	showClear?: boolean;
 	disabled?: boolean;
+	searchOnType?: boolean;
 }
-export default function SearchBar({ handleSearch, handleClear, showClear = false, disabled = false }: SearchBarProps) {
+export default function SearchBar({ handleSearch, handleClear, showClear = false, disabled = false, searchOnType }: SearchBarProps) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [searched, setSearched] = useState(false);
 
@@ -21,6 +22,10 @@ export default function SearchBar({ handleSearch, handleClear, showClear = false
 					value={searchQuery}
 					onChange={e => {
 						setSearchQuery(e.target.value)
+						if (searchOnType) {
+							handleSearch(e.target.value);
+							setSearched(true);
+						}
 						if (!e.target.value) {
 							setSearched(false);
 						}

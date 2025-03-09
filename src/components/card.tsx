@@ -2,23 +2,26 @@ import { Link } from "@tanstack/react-router";
 import { SmallP, TinyP } from "./typography";
 import { ReactNode } from "react";
 import MissingImageBanner from "@/assets/ui/missing-image-banner.jpg";
+import { RefreshSolid } from "@mynaui/icons-react";
 
 type CardUIProps = {
 	href: string;
 	imageURL: string;
 	title: string;
 	subTitle: string;
-	badge?: ReactNode;
+	badges?: ReactNode[];
 	onClick?: () => void;
 }
-export function CardUI({ href, imageURL, title, subTitle, badge, onClick = () => { } }: CardUIProps) {
+export function CardUI({ href, imageURL, title, subTitle, badges, onClick = () => { } }: CardUIProps) {
 	return (
 		<Link
 			className={`relative flex flex-col gap-3 group rounded-lg bg-card border p-2 pb-3 hover:border-primary`}
 			href={href}
 			onClick={onClick}
 		>
-			{badge && badge}
+			<div className="flex gap-2 items-center absolute top-3 right-3 z-20">
+				{badges && badges?.map(badge => badge)}
+			</div>
 			<div className="rounded-lg overflow-hidden w-full aspect-auto flex-1 grid place-items-center bg-background border">
 				<object className="group-hover:scale-[1.05] transition-transform w-full" data={imageURL} type="image/jpg">
 					<img src={MissingImageBanner} alt={`${title}`} />
@@ -42,4 +45,20 @@ export function CardGridUI({ children, className = "" }: CardGridUIProps) {
 			{children}
 		</div>
 	)
+}
+
+export type RemainingChaptersBadgeProps = {
+	remainingChapters: number;
+}
+export function RemainingChaptersBadge({ remainingChapters }: RemainingChaptersBadgeProps) {
+	if (remainingChapters <= 0) return null;
+	return <span className="text-xs p-1 px-2 bg-blue-800 rounded-lg">{remainingChapters}</span>
+}
+
+export type NovelUpdatingBadgeProps = {
+	isUpdating: boolean;
+}
+export function NovelUpdatingBadge({ isUpdating }: NovelUpdatingBadgeProps) {
+	if (!isUpdating) return null;
+	return <span className="text-xs p-1 px-2 bg-green-800 rounded-lg"><RefreshSolid className="size-4" /></span>
 }

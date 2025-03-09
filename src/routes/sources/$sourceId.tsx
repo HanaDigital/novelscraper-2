@@ -86,11 +86,13 @@ function RouteComponent() {
 						imageURL={novel.coverURL ?? novel.thumbnailURL ?? ""}
 						title={novel.title}
 						subTitle={novel.authors.join(', ')}
-						badge={novel.isInLibrary &&
-							<Badge className="absolute top-3 left-3 z-10 text-green-900 p-0">
-								<BookmarkSolid width={20} />
-							</Badge>
-						}
+						badges={[
+							novel.isInLibrary ?
+								<Badge className="absolute top-3 left-3 z-10 text-green-900 p-0">
+									<BookmarkSolid width={20} />
+								</Badge>
+								: null,
+						]}
 						onClick={() => setActiveNovel(novel)}
 					/>
 				))}
