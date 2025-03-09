@@ -105,38 +105,16 @@ async fn update_novel_download_status(
     return source::update_novel_download_status(&state, novel_id, &status).await;
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
-    tauri::Builder::default()
-        .setup(|app| {
-            app.manage(Mutex::new(AppState::default()));
-
-            let handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                update(handle).await.unwrap();
-            });
-            Ok(())
-        })
-        .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_store::Builder::new().build())
-        .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_persisted_scope::init())
-        .invoke_handler(tauri::generate_handler![
-            fetch_html,
-            fetch_image,
-            download_novel_chapters,
-            update_novel_download_status,
-            check_docker_status,
-            start_cloudflare_resolver
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+#[tauri::command]
+async fn check_for_update(app: AppHandle) -> Result<String, String> {
+    if let Some(update) = app.updater().unwrap().check().await.unwrap() {
+        return Ok(update.version);
+    }
+    return Err("No updates available".to_string());
 }
 
-async fn update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
+#[tauri::command]
+async fn install_update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
     if let Some(update) = app.updater()?.check().await? {
         let mut downloaded = 0;
 
@@ -158,4 +136,32 @@ async fn update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .setup(|app| {
+            app.manage(Mutex::new(AppState::default()));
+            Ok(())
+        })
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_persisted_scope::init())
+        .invoke_handler(tauri::generate_handler![
+            fetch_html,
+            fetch_image,
+            download_novel_chapters,
+            update_novel_download_status,
+            check_docker_status,
+            start_cloudflare_resolver,
+            check_for_update,
+            install_update
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

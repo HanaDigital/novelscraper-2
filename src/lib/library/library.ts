@@ -1,9 +1,11 @@
 import { message } from "@tauri-apps/plugin-dialog";
-import { exists, mkdir, remove, writeFile } from "@tauri-apps/plugin-fs";
+import { exists, mkdir, open, remove, writeFile } from "@tauri-apps/plugin-fs";
+import { open as dialogOpen } from '@tauri-apps/plugin-dialog';
 import * as path from '@tauri-apps/api/path';
 import { ChapterT, NovelT } from "../sources/types";
 import { SOURCES } from "../sources/sources";
 import { load } from "@tauri-apps/plugin-store";
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 export const createLibraryDir = async (libraryRootPath: string, subDir = "") => {
 	try {
@@ -44,14 +46,48 @@ export const saveNovelCover = async (novel: NovelT) => {
 		const novelDir = await getNovelDataDir(novel);
 
 		const source = SOURCES[novel.source];
-		const cover = new Uint8Array(await source.fetchImage(coverURL));
+		const coverBuff = new Uint8Array(await source.fetchImage(coverURL));
 		const coverPath = await path.join(novelDir, "cover.png");
-		await writeFile(coverPath, cover);
+		await writeFile(coverPath, coverBuff);
 		return coverPath;
 	} catch (e) {
 		console.error(e);
 		await message(`Couldn't save novel cover for ${novel.title}!`, { title: 'NovelScraper Library', kind: 'error' });
 	}
+}
+
+export const saveNovelCoverFromLocalFile = async (novel: NovelT) => {
+	try {
+		const coverLocalPath = await dialogOpen({
+			defaultPath: await path.downloadDir(),
+			filters: [{
+				name: 'Image',
+				extensions: ['png', 'jpeg', 'jpg']
+			}]
+		});
+		if (!coverLocalPath) return;
+
+		const file = await open(coverLocalPath, {
+			read: true,
+		});
+		const stat = await file.stat();
+		const coverBuff = new Uint8Array(stat.size);
+		await file.read(coverBuff);
+		await file.close();
+
+		const novelDir = await getNovelDataDir(novel);
+		const coverPath = await path.join(novelDir, "cover.png");
+		await writeFile(coverPath, coverBuff);
+		return coverPath;
+	} catch (e) {
+		console.error(e);
+		await message(`Couldn't change cover for ${novel.title}`, { title: SOURCES[novel.source].name, kind: 'error' });
+	}
+}
+
+export const getUnCachedFileSrc = (filePath: string) => {
+	const src = convertFileSrc(filePath) + "?t=" + (new Date).getMilliseconds();
+	return src;
 }
 
 export const saveNovelChapters = async (novel: NovelT, chapters: ChapterT[]) => {
